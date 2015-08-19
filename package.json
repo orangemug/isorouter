@@ -1,0 +1,25 @@
+{
+  "name": "isorouter",
+  "description": "Isomorphic express like router.",
+  "version": "0.0.0",
+  "scripts": {
+    "test": "mocha test/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/orangemug/isorouter.git"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://opensource.org/licenses/MIT"
+    }
+  ],
+  "devDependencies": {
+    "mocha": "^2.2.4"
+  },
+  "dependencies": {
+    "dom-delegate": "^2.0.3",
+    "path-to-regexp": "^1.2.1"
+  }
+}
