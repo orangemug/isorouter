@@ -2,6 +2,7 @@ var url          = require("url");
 var pathToRegexp = require('path-to-regexp');
 var browserEnv   = require("./lib/browser-inject");
 var historyEnv   = require("./lib/history");
+var Qs           = require("qs");
 
 
 function handler(method, path, fn, next) {
@@ -9,13 +10,13 @@ function handler(method, path, fn, next) {
   var keys = re.keys;
 
   this.routes.push(function(_path, _method, req, res) {
-    _path = url.parse(_path).pathname;
+    var pathname = url.parse(_path).pathname;
 
     if(method !== "use" && method !== _method) {
       return false;
     }
 
-    var results = re.exec(_path);
+    var results = re.exec(pathname);
     if(!results) {
       return false;
     }
@@ -31,12 +32,14 @@ function handler(method, path, fn, next) {
 
     req.path  = urlParsed.path;
     req.query = urlParsed.query;
-
-    fn(req, res);
+    req.url   = urlParsed.path + "?" + Qs.stringify(urlParsed.query);
 
     if(method === "use") {
+      // HACK: next
+      fn(req, res, function() {});
       return false;
     } else {
+      fn(req, res);
       return true;
     }
   });
