@@ -1,5 +1,7 @@
 var url          = require("url");
 var pathToRegexp = require('path-to-regexp');
+var browserEnv   = require("./lib/browser-inject");
+var historyEnv   = require("./lib/history");
 
 
 function handler(method, path, fn, next) {
@@ -46,7 +48,7 @@ function go(path, method, silent) {
   var res = {};
 
   if(!silent) {
-    state.go(path);
+    historyEnv.go(path);
   }
 
   if(!ret) {
@@ -64,15 +66,15 @@ function go(path, method, silent) {
 module.exports = function(opts) {
   opts = opts || {};
  
-  var browserEnv, router;
+  var env, router;
 
   var ctx = {
     routes: []
   };
 
   function destroy() {
-    if(browserEnv) {
-      browserEnv.destroy();
+    if(env) {
+      env.destroy();
     }
   }
 
@@ -88,11 +90,12 @@ module.exports = function(opts) {
     delete: handler.bind(ctx, "delete"),
     use: handler.bind(ctx, "use"),
     go: go.bind(ctx),
-    destroy: destroy
+    destroy: destroy,
+    history: historyEnv
   };
 
   if(opts.inject) {
-    browserEnv = inject.call(router, opts.inject);
+    env = browserEnv.call(router, opts.inject);
   }
 
   return router;
