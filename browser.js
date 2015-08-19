@@ -32,7 +32,7 @@ function handler(method, path, fn, next) {
 
     req.path  = urlParsed.pathname;
     req.query = urlParsed.query;
-    req.url   = urlParsed.path + "?" + Qs.stringify(urlParsed.query);
+    req.url   = urlParsed.pathname + "?" + Qs.stringify(urlParsed.query);
 
     if(method === "use") {
       // HACK: next
