@@ -30,7 +30,7 @@ function handler(method, path, fn, next) {
 
     var urlParsed = url.parse(_path, true);
 
-    req.path  = urlParsed.path;
+    req.path  = urlParsed.pathname;
     req.query = urlParsed.query;
     req.url   = urlParsed.path + "?" + Qs.stringify(urlParsed.query);
 
@@ -46,13 +46,19 @@ function handler(method, path, fn, next) {
 }
 
 function go(path, method, silent, body) {
+  var self = this;
   method = method || "get";
 
   var ret = true;
   var req = {
 		body: body
 	};
-  var res = {};
+  var res = {
+    redirect: function(_path) {
+      go.call(self, _path, "get");
+      return;
+    }
+  };
 
   if(!silent) {
     historyEnv.go(path);
