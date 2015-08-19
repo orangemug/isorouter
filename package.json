@@ -2,6 +2,8 @@
   "name": "isorouter",
   "description": "Isomorphic express like router.",
   "version": "0.0.0",
+  "main": "./server.js",
+  "browser": "./browser.js",
   "scripts": {
     "test": "mocha test/index.js"
   },
@@ -29,6 +31,7 @@
   },
   "dependencies": {
     "dom-delegate": "^2.0.3",
+    "express": "^4.13.3",
     "path-to-regexp": "^1.2.1"
   }
 }
