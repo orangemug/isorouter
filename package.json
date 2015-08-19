@@ -16,7 +16,16 @@
     }
   ],
   "devDependencies": {
-    "mocha": "^2.2.4"
+    "body-parser": "^1.13.3",
+    "browserify": "^11.0.1",
+    "express": "^4.13.3",
+    "express-handlebars": "^2.0.1",
+    "method-override": "^2.3.5",
+    "mocha": "^2.2.4",
+    "node-jsx": "^0.13.3",
+    "react": "^0.13.3",
+    "reactify": "^1.1.1",
+    "yargs": "^3.19.0"
   },
   "dependencies": {
     "dom-delegate": "^2.0.3",
