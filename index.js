@@ -9,6 +9,8 @@ function handler(method, path, fn, next) {
   var keys = re.keys;
 
   this.routes.push(function(_path, _method, req, res) {
+    _path = url.parse(_path).pathname;
+
     if(method !== "use" && method !== _method) {
       return false;
     }
@@ -40,11 +42,13 @@ function handler(method, path, fn, next) {
   });
 }
 
-function go(path, method, silent) {
+function go(path, method, silent, body) {
   method = method || "get";
 
   var ret = true;
-  var req = {};
+  var req = {
+		body: body
+	};
   var res = {};
 
   if(!silent) {
