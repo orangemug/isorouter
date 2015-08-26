@@ -45,12 +45,15 @@ function handler(method, path, fn, next) {
   });
 }
 
+var uid = 0;
+
 function go(path, method, silent, body) {
   var self = this;
   method = method || "get";
 
   var ret = true;
   var req = {
+    __id: uid++,
 		body: body
 	};
   var res = {
