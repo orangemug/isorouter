@@ -6,7 +6,7 @@ var Qs           = require("qs");
 
 
 function handler(method, path, fn, next) {
-  var re = pathToRegexp(path, keys);
+  var re = pathToRegexp(path);
   var keys = re.keys;
 
   this.routes.push(function(_path, _method, req, res) {
