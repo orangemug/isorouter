@@ -1,6 +1,10 @@
 var express = require("express");
 
-module.exports = function(opts) {
+/**
+ * serverRouter
+ * @return {Object} express router
+ */
+module.exports = function serverRouter (opts) {
   var router = express.Router();
   return router;
 };
