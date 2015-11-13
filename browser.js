@@ -4,7 +4,14 @@ var browserEnv   = require("./lib/browser-inject");
 var historyEnv   = require("./lib/history");
 var Qs           = require("qs");
 
-
+/**
+ * handler - create a route handler
+ * @param {String}    method        http method (GET, POST, PUT, DELETE)
+ * @param {String}    path          path to navigate to
+ * @param {Function}  fn            middleware function
+ * @param {Function}  next          call the next item in the middleware stack
+ * @returns {undefined}
+ */
 function handler(method, path, fn, next) {
   var re = pathToRegexp(path);
   var keys = re.keys;
@@ -47,6 +54,14 @@ function handler(method, path, fn, next) {
 
 var uid = 0;
 
+/**
+ * go - peform a request to router
+ * @param {String}    path          path to navigate to
+ * @param {String}    method        http method (GET, POST, PUT, DELETE)
+ * @param {Boolean}   silent        if silent the item isn't added to pushstate history
+ * @param {Object}    body          request body to send
+ * @returns {Boolean} if the request was sent
+ */
 function go(path, method, silent, body) {
   var self = this;
   method = method || "get";
@@ -78,10 +93,15 @@ function go(path, method, silent, body) {
 
 
 
-
-module.exports = function(opts) {
+/**
+ * clientRouter - create an express compliant router for use in the browser
+ * @param {Object}  opts           router configuration options
+ * @param {String}  opts.inject    dom selector for element to replace on navigation
+ * @return {Object} express router
+ */
+module.exports = function clientRouter (opts) {
   opts = opts || {};
- 
+
   var env, router;
 
   var ctx = {
