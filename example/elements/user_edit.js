@@ -2,8 +2,8 @@ var React = require("react");
 
 
 module.exports = React.createClass({
-	render: function() {
-		return (
+  render: function() {
+    return (
       <div>
         <h1>Users</h1>
         <form method="post" action="/user?_method=put">
@@ -26,6 +26,6 @@ module.exports = React.createClass({
           <input type="submit" />
         </form>
       </div>
-		)
-	}
+    )
+  }
 });
