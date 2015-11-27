@@ -69,8 +69,8 @@ function go(path, method, silent, body) {
   var ret = true;
   var req = {
     __id: uid++,
-		body: body
-	};
+    body: body
+  };
   var res = {
     redirect: function(_path) {
       go.call(self, _path, "get");
