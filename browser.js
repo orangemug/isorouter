@@ -1,4 +1,4 @@
-var url          = require("url");
+var Url          = require("url");
 var pathToRegexp = require('path-to-regexp');
 var browserEnv   = require("./lib/browser-inject");
 var historyEnv   = require("./lib/history");
@@ -52,7 +52,7 @@ function handler(method, path, fn, next) {
   var keys = re.keys;
 
   this.routes.push(function(_path, _method, req, res) {
-    var pathname = url.parse(_path).pathname;
+    var pathname = Url.parse(_path).pathname;
 
     if(method !== "use" && method !== _method) {
       return false;
@@ -70,7 +70,7 @@ function handler(method, path, fn, next) {
 
     req.params = params;
 
-    var urlParsed = url.parse(_path, true);
+    var urlParsed = Url.parse(_path, true);
 
     req.path  = urlParsed.pathname;
     req.query = urlParsed.query;
