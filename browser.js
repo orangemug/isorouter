@@ -82,6 +82,9 @@ function go(path, method, silent, body) {
     historyEnv.go(path);
   }
 
+  // Reset scroll position
+  window.scrollTop(0,0);
+
   if(!ret) {
     return false;
   }
