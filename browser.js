@@ -83,7 +83,7 @@ function go(path, method, silent, body) {
   }
 
   // Reset scroll position
-  window.scrollTop(0,0);
+  window.scrollTo(0,0);
 
   if(!ret) {
     return false;
