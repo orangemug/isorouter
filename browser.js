@@ -1,8 +1,43 @@
-var url          = require("url");
+var Url          = require("url");
 var pathToRegexp = require('path-to-regexp');
 var browserEnv   = require("./lib/browser-inject");
 var historyEnv   = require("./lib/history");
 var Qs           = require("qs");
+
+/**
+ * make a url from an href or action attribute into a url isoRouter can handle
+ *
+ * If clicking a link on a page hosted at /land?animal=badger#grass
+ *
+ * If a host or pathname there is enough to route
+ * /sea                    -> /sea
+ * /sea#weed               -> /sea#weed
+ * /sea?fish=flounder      -> /sea?fish=flounder
+ * /sea?fish=flounder#weed -> /sea?fish=flounder#weed
+ *
+ * If only a search query is given it is intended to be relative to the current path
+ * ?fish=flounder          -> /land?fish=flounder
+ * ?fish=flounder#weed     -> /land?fish=flounder#weed
+ *
+ * If only a hash is given it is intended to be relative to the current search query
+ * #sea                    -> /land?animal=badger#sea
+ *
+ * @param {String}  url     input url to normalize
+ * @returns {String} normalized url ensuring hash, search and path are appropriate
+ */
+function tidyUrl(url) {
+  var urlParsed = Url.parse(url, true);
+
+  if (!urlParsed.host && !urlParsed.pathname) {
+    urlParsed.pathname = window.location.pathname;
+
+    if (urlParsed.hash && !urlParsed.search) {
+      urlParsed.search = window.location.search;
+    }
+  }
+
+  return Url.format(urlParsed);
+}
 
 /**
  * handler - create a route handler
@@ -17,7 +52,7 @@ function handler(method, path, fn, next) {
   var keys = re.keys;
 
   this.routes.push(function(_path, _method, req, res) {
-    var pathname = url.parse(_path).pathname;
+    var pathname = Url.parse(_path).pathname;
 
     if(method !== "use" && method !== _method) {
       return false;
@@ -35,7 +70,7 @@ function handler(method, path, fn, next) {
 
     req.params = params;
 
-    var urlParsed = url.parse(_path, true);
+    var urlParsed = Url.parse(_path, true);
 
     req.path  = urlParsed.pathname;
     req.query = urlParsed.query;
@@ -65,6 +100,8 @@ var uid = 0;
 function go(path, method, silent, body) {
   var self = this;
   method = method || "get";
+
+  path = tidyUrl(path);
 
   var ret = true;
   var req = {
