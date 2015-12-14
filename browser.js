@@ -103,7 +103,6 @@ function go(path, method, silent, body) {
 
   path = tidyUrl(path);
 
-  var ret = true;
   var req = {
     __id: uid++,
     body: body
@@ -119,16 +118,19 @@ function go(path, method, silent, body) {
     historyEnv.go(path);
   }
 
-  // Reset scroll position
-  window.scrollTo(0,0);
-
-  if(!ret) {
-    return false;
-  }
-  this.routes.some(function(fn) {
+  var isRouteFound = this.routes.some(function(fn) {
     return fn(path, method, req, res);
   });
-  return true;
+
+  if (isRouteFound) {
+    // Reset scroll position
+    window.scrollTo(0,0);
+
+    // return true to prevent default navigation
+    return true;
+  } else {
+    return false;
+  }
 }
 
 
