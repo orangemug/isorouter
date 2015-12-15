@@ -95,9 +95,10 @@ var uid = 0;
  * @param {String}    method        http method (GET, POST, PUT, DELETE)
  * @param {Boolean}   silent        if silent the item isn't added to pushstate history
  * @param {Object}    body          request body to send
+ * @param {Object}    metadata      extra data such as a flash message
  * @returns {Boolean} if the request was sent
  */
-function go(path, method, silent, body) {
+function go(path, method, silent, body, metadata) {
   var self = this;
   method = method || "get";
 
@@ -105,11 +106,12 @@ function go(path, method, silent, body) {
 
   var req = {
     __id: uid++,
-    body: body
+    body: body,
+    metadata: metadata
   };
   var res = {
-    redirect: function(_path) {
-      go.call(self, _path, "get");
+    redirect: function(_path, silent, data, metadata) {
+      go.call(self, _path, "get", silent, data, metadata);
       return;
     }
   };
