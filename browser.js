@@ -104,6 +104,11 @@ function go(path, method, silent, body, locals) {
 
   path = tidyUrl(path);
 
+  var lastRoute = this.history[this.history.length - 1];
+  if (lastRoute && lastRoute.method === method && lastRoute.path === path) {
+    console.warn("isoRouter: Trying to navigate to same path.", lastRoute);
+  }
+
   var req = {
     __id: uid++,
     body: body,
@@ -125,6 +130,12 @@ function go(path, method, silent, body, locals) {
   });
 
   if (isRouteFound) {
+    // Store the history
+    this.history.push({
+      method: method,
+      path: path
+    });
+
     // Reset scroll position
     window.scrollTo(0,0);
 
@@ -149,7 +160,8 @@ module.exports = function clientRouter (opts) {
   var env, router;
 
   var ctx = {
-    routes: []
+    routes: [],
+    history: []
   };
 
   function destroy() {
@@ -180,4 +192,3 @@ module.exports = function clientRouter (opts) {
 
   return router;
 };
-
