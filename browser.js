@@ -119,6 +119,7 @@ function go(path, method, silent, body, locals) {
 
   // If navigating to a different host then want to do full navigation
   if (parsedUrl.host && window.location && parsedUrl.host !== window.location.hostname) {
+    window.location.href = url;
     return false;
   }
 
