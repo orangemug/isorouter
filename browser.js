@@ -26,17 +26,17 @@ var Qs           = require("qs");
  * @returns {String} normalized url ensuring hash, search and path are appropriate
  */
 function tidyUrl(url) {
-  var urlParsed = Url.parse(url, true);
+  var parsedUrl = Url.parse(url, true);
 
-  if (!urlParsed.host && !urlParsed.pathname) {
-    urlParsed.pathname = window.location.pathname;
+  if (!parsedUrl.host && !parsedUrl.pathname) {
+    parsedUrl.pathname = window.location.pathname;
 
-    if (urlParsed.hash && !urlParsed.search) {
-      urlParsed.search = window.location.search;
+    if (parsedUrl.hash && !parsedUrl.search) {
+      parsedUrl.search = window.location.search;
     }
   }
 
-  return Url.format(urlParsed);
+  return parsedUrl;
 }
 
 /**
@@ -70,11 +70,11 @@ function handler(method, path, fn, next) {
 
     req.params = params;
 
-    var urlParsed = Url.parse(_path, true);
+    var parsedUrl = Url.parse(_path, true);
 
-    req.path  = urlParsed.pathname;
-    req.query = urlParsed.query;
-    req.url   = urlParsed.pathname + "?" + Qs.stringify(urlParsed.query);
+    req.path  = parsedUrl.pathname;
+    req.query = parsedUrl.query;
+    req.url   = parsedUrl.pathname + "?" + Qs.stringify(parsedUrl.query);
 
     if(method === "use") {
       // HACK: next
@@ -95,34 +95,61 @@ var uid = 0;
  * @param {String}    method        http method (GET, POST, PUT, DELETE)
  * @param {Boolean}   silent        if silent the item isn't added to pushstate history
  * @param {Object}    body          request body to send
+ * @param {Object}    locals        extra data such as a flash message
  * @returns {Boolean} if the request was sent
  */
-function go(path, method, silent, body) {
+function go(path, method, silent, body, locals) {
   var self = this;
   method = method || "get";
 
-  path = tidyUrl(path);
+  var parsedUrl = tidyUrl(path);
+
+  var url = parsedUrl.format(parsedUrl);
+
+  // If redirecting to self catch and do a full navigation
+  var lastRoute = this.history[this.history.length - 1];
+  if (lastRoute && lastRoute.method === method && lastRoute.path === url) {
+    if (this.selfRedirectCount >= 50) {
+      console.warn("isoRouter: Tried to navigate to same path more than 50 times.");
+      return false;
+    } else {
+      this.selfRedirectCount++
+    }
+  }
+
+  // If navigating to a different host then want to do full navigation
+  if (parsedUrl.host && window.location && parsedUrl.host !== window.location.hostname) {
+    window.location.href = url;
+    return false;
+  }
 
   var req = {
     __id: uid++,
-    body: body
+    body: body,
+    locals: locals
   };
   var res = {
-    redirect: function(_path) {
-      go.call(self, _path, "get");
+    redirect: function(_path, silent, data, locals) {
+      go.call(self, _path, "get", silent, data, locals);
       return;
     }
   };
 
   if(!silent) {
-    historyEnv.go(path);
+    historyEnv.go(url);
   }
 
   var isRouteFound = this.routes.some(function(fn) {
-    return fn(path, method, req, res);
+    return fn(url, method, req, res);
   });
 
   if (isRouteFound) {
+    // Store the history
+    this.history.push({
+      method: method,
+      path: url
+    });
+
     // Reset scroll position
     window.scrollTo(0,0);
 
@@ -147,7 +174,9 @@ module.exports = function clientRouter (opts) {
   var env, router;
 
   var ctx = {
-    routes: []
+    routes: [],
+    history: [],
+    selfRedirectCount: 0
   };
 
   function destroy() {
@@ -178,4 +207,3 @@ module.exports = function clientRouter (opts) {
 
   return router;
 };
-
