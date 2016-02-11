@@ -1,6 +1,6 @@
 var Url          = require("url");
 var pathToRegexp = require("path-to-regexp");
-var browserEnv   = require("./lib/browser-inject");
+var browserEnv   = require("./lib/dom_event_handler");
 var historyEnv   = require("./lib/history");
 var Qs           = require("qs");
 
@@ -180,7 +180,7 @@ function go (path, method, silent, body, locals) {
 module.exports = function clientRouter (opts) {
   opts = opts || {};
 
-  var env, router;
+  var domEventHandler, router;
 
   var ctx = {
     routes: [],
@@ -188,17 +188,19 @@ module.exports = function clientRouter (opts) {
     selfRedirectCount: 0
   };
 
-  function destroy () {
-    if (env) {
-      env.destroy();
+  function removeDomEventHandler () {
+    if (domEventHandler) {
+      domEventHandler.destroy();
     }
   }
 
+  // When the url changes want to trigger the appropriate handler
   window.addEventListener("popstate", function () {
     var url = document.location.pathname + document.location.search;
     go.call(ctx, url, "get", true);
   });
 
+  // Expose the router API
   router = {
     get: handler.bind(ctx, "get"),
     post: handler.bind(ctx, "post"),
@@ -206,12 +208,13 @@ module.exports = function clientRouter (opts) {
     delete: handler.bind(ctx, "delete"),
     use: handler.bind(ctx, "use"),
     go: go.bind(ctx),
-    destroy: destroy,
+    removeDomEventHandler: removeDomEventHandler,
     history: historyEnv
   };
 
+  // Injects a delegate event listener onto window or a specific node
   if (opts.inject) {
-    env = browserEnv.call(router, opts.inject);
+    domEventHandler = browserEnv.call(router, opts.inject);
   }
 
   return router;
