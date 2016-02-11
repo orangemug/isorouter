@@ -20,6 +20,7 @@
   "devDependencies": {
     "body-parser": "^1.13.3",
     "browserify": "^11.0.1",
+    "eslint": "^1.10.3",
     "express-handlebars": "^2.0.1",
     "method-override": "^2.3.5",
     "mocha": "^2.2.4",
@@ -31,6 +32,7 @@
   "dependencies": {
     "dom-delegate": "^2.0.3",
     "express": "^4.13.3",
+    "lodash.set": "^4.0.0",
     "path-to-regexp": "^1.2.1",
     "qs": "^4.0.0"
   }

@@ -1,5 +1,5 @@
 var Url          = require("url");
-var pathToRegexp = require('path-to-regexp');
+var pathToRegexp = require("path-to-regexp");
 var browserEnv   = require("./lib/browser-inject");
 var historyEnv   = require("./lib/history");
 var Qs           = require("qs");
@@ -25,7 +25,7 @@ var Qs           = require("qs");
  * @param {String}  url     input url to normalize
  * @returns {String} normalized url ensuring hash, search and path are appropriate
  */
-function tidyUrl(url) {
+function tidyUrl (url) {
   var parsedUrl = Url.parse(url, true);
 
   if (!parsedUrl.host && !parsedUrl.pathname) {
@@ -47,24 +47,24 @@ function tidyUrl(url) {
  * @param {Function}  next          call the next item in the middleware stack
  * @returns {undefined}
  */
-function handler(method, path, fn, next) {
+function handler (method, path, fn, next) {
   var re = pathToRegexp(path);
   var keys = re.keys;
 
-  this.routes.push(function(_path, _method, req, res) {
+  this.routes.push(function (_path, _method, req, res) {
     var pathname = Url.parse(_path).pathname;
 
-    if(method !== "use" && method !== _method) {
+    if (method !== "use" && method !== _method) {
       return false;
     }
 
     var results = re.exec(pathname);
-    if(!results) {
+    if (!results) {
       return false;
     }
 
     var params = {};
-    keys.forEach(function(key, idx) {
+    keys.forEach(function (key, idx) {
       params[key.name] = results[idx+1];
     });
 
@@ -76,9 +76,9 @@ function handler(method, path, fn, next) {
     req.query = parsedUrl.query;
     req.url   = parsedUrl.pathname + "?" + Qs.stringify(parsedUrl.query);
 
-    if(method === "use") {
+    if (method === "use") {
       // HACK: next
-      fn(req, res, function() {});
+      fn(req, res, function () {});
       return false;
     } else {
       fn(req, res);
@@ -98,7 +98,7 @@ var uid = 0;
  * @param {Object}    locals        extra data such as a flash message
  * @returns {Boolean} if the request was sent
  */
-function go(path, method, silent, body, locals) {
+function go (path, method, silent, body, locals) {
   var self = this;
   method = method || "get";
 
@@ -113,7 +113,7 @@ function go(path, method, silent, body, locals) {
       console.warn("isoRouter: Tried to navigate to same path more than 50 times.");
       return false;
     } else {
-      this.selfRedirectCount++
+      this.selfRedirectCount++;
     }
   }
 
@@ -123,23 +123,32 @@ function go(path, method, silent, body, locals) {
     return false;
   }
 
+  // request object, similar to express
   var req = {
     __id: uid++,
     body: body,
     locals: locals
   };
+
+  // response object, similar to express
   var res = {
-    redirect: function(_path, silent, data, locals) {
+    redirect: function (_path, silent, data, locals) {
       go.call(self, _path, "get", silent, data, locals);
       return;
     }
   };
 
-  if(!silent) {
+  // If silent then redirect without recording browser history
+  // or triggering action
+  if (silent) {
+    historyEnv.redirect(url);
+    return true;
+  } else {
     historyEnv.go(url);
   }
 
-  var isRouteFound = this.routes.some(function(fn) {
+  // Find the matching route based on url and method
+  var isRouteFound = this.routes.some(function (fn) {
     return fn(url, method, req, res);
   });
 
@@ -166,7 +175,7 @@ function go(path, method, silent, body, locals) {
  * clientRouter - create an express compliant router for use in the browser
  * @param {Object}  opts           router configuration options
  * @param {String}  opts.inject    dom selector for element to replace on navigation
- * @return {Object} express router
+ * @returns {Object} express router
  */
 module.exports = function clientRouter (opts) {
   opts = opts || {};
@@ -179,13 +188,13 @@ module.exports = function clientRouter (opts) {
     selfRedirectCount: 0
   };
 
-  function destroy() {
-    if(env) {
+  function destroy () {
+    if (env) {
       env.destroy();
     }
   }
 
-  window.addEventListener("popstate", function(e) {
+  window.addEventListener("popstate", function () {
     var url = document.location.pathname + document.location.search;
     go.call(ctx, url, "get", true);
   });
@@ -201,7 +210,7 @@ module.exports = function clientRouter (opts) {
     history: historyEnv
   };
 
-  if(opts.inject) {
+  if (opts.inject) {
     env = browserEnv.call(router, opts.inject);
   }
 
