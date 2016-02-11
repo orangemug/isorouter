@@ -132,9 +132,29 @@ function go (path, method, silent, body, locals) {
 
   // response object, similar to express
   var res = {
-    redirect: function (_path, silent, data, locals) {
-      go.call(self, _path, "get", silent, data, locals);
-      return;
+
+    // Mimic functionality of express res.redirect
+    redirect: function (url) {
+      var address = url;
+      var status = 302;
+      var opts = {};
+
+      // allow status / url
+      if (arguments.length === 2) {
+        if (typeof arguments[0] === "number") {
+          status = arguments[0];
+          address = arguments[1];
+        } else {
+          status = arguments[1];
+        }
+      } else if (arguments.length === 3) {
+        address = arguments[0];
+        status = arguments[1];
+        opts = arguments[2];
+      }
+      this.statusCode = status;
+
+      return go.call(self, address, opts.silent, opts.body, opts.locals);
     }
   };
 
