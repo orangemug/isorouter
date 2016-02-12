@@ -19,7 +19,7 @@ When building a JavaScript package with browserify `require("isorouter")` will r
 
 To mount the browserRouter into the browser it must be 'executed' using `router.go()`.
 
-This sets up delegate handlers to listen for events such as url changes, clicks on `a` tags and submit events from `form` tags. These events will trigger the router methods. 
+This sets up delegate handlers to listen for events such as url changes, clicks on `a` tags and submit events from `form` tags. These events will trigger the router methods.
 
 ## Usage
 
@@ -93,7 +93,15 @@ In our example, if a user clicks a link such as `<a href="/users">Click here</a>
 
 ### Browser specific functions
 
-`router.go(url, method, silent, data)`
+`router.go(url, opts)`
+
+Performs a request to the router triggering any handlers listing on the given url. Options:
+
+* method: http method to call the url with such as `get`, `post`, `put`, `patch`, defaults to `get`.
+* body: object passed to handler as `req.body`
+* locals: object passed to handler as `req.locals`
+* silent: trigger navigation without adding to pushstate
+* replace: navigate replacing the last item in pushstate (useful for redirects to )
 
 Go will mount the router into the browser and start listening for events and url changes. It will also do a first time trigger with the current url (via get).
 
@@ -155,4 +163,3 @@ Click events on submit tags will be handled as per form tags.
 Currently the `clientRouter` doesn't support using `use` without a url. This can be easily overcome by using `router.use("/*", middleware)`.
 
 The form serialization can only create flat JSON objects. For nested objects your JS will have to build the JSON and call the routing directly. `router.go(url, method, false, {my: {nested: {json: "object"}}})`.
-
