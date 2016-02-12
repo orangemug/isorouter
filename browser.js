@@ -92,15 +92,24 @@ var uid = 0;
 /**
  * go - peform a request to router
  * @param {String}    path          path to navigate to
- * @param {String}    method        http method (GET, POST, PUT, DELETE)
- * @param {Boolean}   silent        if silent the item isn't added to pushstate history
- * @param {Object}    body          request body to send
- * @param {Object}    locals        extra data such as a flash message
+ * @param {Object}    opts          navigation options
+ * @param {String}    opts.method   http method (GET, POST, PUT, DELETE)
+ * @param {Boolean}   opts.replace  replace the last item in pushstate history
+ * @param {Boolean}   opts.silent   if silent the router handler isn't triggered
+ * @param {Object}    opts.body     request body to send
+ * @param {Object}    opts.locals   extra data such as a flash message
  * @returns {Boolean} if the request was sent
  */
-function go (path, method, silent, body, locals) {
+function go (path, opts) {
   var self = this;
-  method = method || "get";
+
+  opts = opts || {};
+
+  var method = opts.method || "get";
+  var silent = opts.silent || false;
+  var replace = opts.replace || false;
+  var body = opts.body || {};
+  var locals = opts.locals || {};
 
   var parsedUrl = tidyUrl(path);
 
@@ -154,16 +163,20 @@ function go (path, method, silent, body, locals) {
       }
       this.statusCode = status;
 
-      return go.call(self, address, opts.silent, opts.body, opts.locals);
+      return go.call(self, address, {
+        silent: opts.silent,
+        replace: opts.replace,
+        body: opts.body,
+        locals: opts.locals
+      });
     }
   };
 
-  // If silent then redirect without recording browser history
-  // or triggering action
-  if (silent) {
+  // If replace then redirect replacing the last item in window.history
+  if (replace) {
     historyEnv.redirect(url);
     return true;
-  } else {
+  } else if (!silent) {
     historyEnv.go(url);
   }
 
@@ -214,10 +227,12 @@ module.exports = function clientRouter (opts) {
     }
   }
 
-  // When the url changes want to trigger the appropriate handler
+  // When the url changes (such as back button) want to trigger the appropriate handler
   window.addEventListener("popstate", function () {
     var url = document.location.pathname + document.location.search;
-    go.call(ctx, url, "get", true);
+    go.call(ctx, url, {
+      silent: true
+    });
   });
 
   // Expose the router API
