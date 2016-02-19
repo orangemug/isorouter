@@ -51,7 +51,9 @@ function handler (method, path, fn, next) {
   var re = pathToRegexp(path);
   var keys = re.keys;
 
-  this.routes.push(function (_path, _method, req, res) {
+  next = next || function () {};
+
+  function routeHandler (_path, _method, req, res) {
     var pathname = Url.parse(_path).pathname;
 
     if (method !== "use" && method !== _method) {
@@ -78,13 +80,15 @@ function handler (method, path, fn, next) {
 
     if (method === "use") {
       // HACK: next
-      fn(req, res, function () {});
+      fn(req, res, next);
       return false;
     } else {
-      fn(req, res);
+      fn(req, res, next);
       return true;
     }
-  });
+  }
+
+  this.routes.push(routeHandler);
 }
 
 var uid = 0;
@@ -127,7 +131,7 @@ function go (path, opts) {
   }
 
   // If navigating to a different host then want to do full navigation
-  if (parsedUrl.host && window.location && parsedUrl.host !== window.location.hostname) {
+  if ((parsedUrl.host && window.location && parsedUrl.host !== window.location.hostname) || opts.hard) {
     window.location.href = url;
     return false;
   }
