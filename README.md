@@ -1,29 +1,23 @@
 # isorouter
 ![stability-experimental](https://img.shields.io/badge/stability-experimental-orange.svg)
 
-A router which works both on the server (in express apps) and inside browsers.
-
-Isorouter actually exports two types of router depending on the environment but they are designed to have the same API so all downstream code runs in the same way.
+A router for both the client and the server with an express.js like API.
 
 ## How it works on the server
 
-`require("isorouter")` will return a vanilla express router.
-
-This router can be used as per an express router. However, it should only be used with isorouter compliant methods to ensure isomorphic compatibility.
+`require("isorouter")` will return a vanilla express router. However, it should only be used with isorouter compliant methods to ensure code will be compatibile.
 
 ## How it works on the browser
 
-When run on a client it is easiest to think of isorouter as mounting an express server into the browser itself. The browser provides the incoming requests to the router which are handled in an express like manner.
+When run on a client it is easiest to think of isorouter as mounting an express server into the browser itself. The browser provides the incoming requests to the router via the url (pushstate) which are handled in an express like manner.
 
-When building a JavaScript package with browserify `require("isorouter")` will return an clientRouter. This works because browserify uses the 'browser' value of `package.json` to load a script instead of the usual 'main' value.
+`require("isorouter")` will return an isoRouter. This mimics the functionality of express middleware and route matching.
 
-To mount the browserRouter into the browser it must be 'executed' using `router.go()`.
-
-This sets up delegate handlers to listen for events such as url changes, clicks on `a` tags and submit events from `form` tags. These events will trigger the router methods.
+To start the app trigger the first route with `router.go(window.location)`.
 
 ## Usage
 
-## Create a router
+### Create an isomorphic router
 
 router.js
 ```js
@@ -32,7 +26,7 @@ router.js
  * Create a router
  */
 var router = isorouter({
-  inject: "#app" // on the client the #app element will be replaced
+  inject: true // Add event listeners to window which trigger navigation such as tags and forms
 });
 
 router.get("/users", function (req, res) {
@@ -42,7 +36,7 @@ router.get("/users", function (req, res) {
 module.exports = router;
 ```
 
-## Server usage
+### Server usage
 
 server.js
 ```js
@@ -70,14 +64,14 @@ app.listen(3000, function () {
 
 When a request comes into the express server isorouter will handle it like normal express middleware and result in a server side render.
 
-## Client usage
+### Client usage
 
 client.js
 ```js
 var router = require("./router");
 
 /*
- * Mount the router and start the app
+ * Trigger initial navigation
  */
 router.go();
 ```
@@ -95,15 +89,15 @@ In our example, if a user clicks a link such as `<a href="/users">Click here</a>
 
 `router.go(url, opts)`
 
-Performs a request to the router triggering any handlers listing on the given url. Options:
+Performs a request to the router triggering any handlers listing on the given url.
+
+Options:
 
 * method: http method to call the url with such as `get`, `post`, `put`, `patch`, defaults to `get`.
 * body: object passed to handler as `req.body`
 * locals: object passed to handler as `req.locals`
 * silent: trigger navigation without adding to pushstate
-* replace: navigate replacing the last item in pushstate (useful for redirects to )
-
-Go will mount the router into the browser and start listening for events and url changes. It will also do a first time trigger with the current url (via get).
+* replace: navigate replacing the last item in pushstate (useful for redirects to)
 
 `router.destroy()`
 

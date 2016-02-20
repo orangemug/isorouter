@@ -127,7 +127,6 @@ function go (path, opts) {
   var locals = opts.locals || {};
 
   var parsedUrl = tidyUrl(path);
-
   var url = parsedUrl.format(parsedUrl);
 
   // If redirecting to self catch and do a full navigation
@@ -187,13 +186,13 @@ function go (path, opts) {
     }
   };
 
-  // opts.replace will replace the url without navigation
+  // opts.replace will replace the url without without triggering the route
   if (replace) {
     historyEnv.redirect(url);
     return true;
   }
 
-  // If not silent then change the url
+  // opts.silent will trigger the route without changing the url
   if (!silent) {
     historyEnv.go(url);
   }
