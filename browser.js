@@ -47,45 +47,56 @@ function tidyUrl (url) {
  * @param {Function}  next          call the next item in the middleware stack
  * @returns {undefined}
  */
-function handler (method, path, fn, next) {
+function addRouteHandler (method, path, fn) {
   var re = pathToRegexp(path);
   var keys = re.keys;
 
-  next = next || function () {};
-
-  function routeHandler (_path, _method, req, res) {
-    var pathname = Url.parse(_path).pathname;
-
+  function routeHandler (_method, _path) {
+    // Check the method matches
     if (method !== "use" && method !== _method) {
       return false;
     }
 
+    // Check the path matches
+    var pathname = Url.parse(_path).pathname;
     var results = re.exec(pathname);
     if (!results) {
       return false;
     }
+
+    // Parse the url and extrac the params
+    var parsedUrl = Url.parse(_path, true);
 
     var params = {};
     keys.forEach(function (key, idx) {
       params[key.name] = results[idx+1];
     });
 
-    req.params = params;
+    return function handler () {
+      var err, req, res, next;
+      if (arguments.length === 4) {
+        err = arguments[0];
+        req = arguments[1];
+        res = arguments[2];
+        next = arguments[3];
+      } else {
+        req = arguments[0];
+        res = arguments[1];
+        next = arguments[2];
+      }
 
-    var parsedUrl = Url.parse(_path, true);
+      req.params = params;
 
-    req.path  = parsedUrl.pathname;
-    req.query = parsedUrl.query;
-    req.url   = parsedUrl.pathname + "?" + Qs.stringify(parsedUrl.query);
+      req.path  = parsedUrl.pathname;
+      req.query = parsedUrl.query;
+      req.url   = parsedUrl.pathname + "?" + Qs.stringify(parsedUrl.query);
 
-    if (method === "use") {
-      // HACK: next
-      fn(req, res, next);
-      return false;
-    } else {
-      fn(req, res, next);
-      return true;
-    }
+      if (err) {
+        return fn(err, req, res, next);
+      } else {
+        return fn(req, res, next);
+      }
+    };
   }
 
   this.routes.push(routeHandler);
@@ -140,12 +151,12 @@ function go (path, opts) {
   var req = {
     __id: uid++,
     body: body,
-    locals: locals
+    locals: locals,
+    originalUrl: url
   };
 
   // response object, similar to express
   var res = {
-
     // Mimic functionality of express res.redirect
     redirect: function (url) {
       var address = url;
@@ -176,20 +187,38 @@ function go (path, opts) {
     }
   };
 
-  // If replace then redirect replacing the last item in window.history
+  // opts.replace will replace the url without navigation
   if (replace) {
     historyEnv.redirect(url);
     return true;
-  } else if (!silent) {
+  }
+
+  // If not silent then change the url
+  if (!silent) {
     historyEnv.go(url);
   }
 
   // Find the matching route based on url and method
-  var isRouteFound = this.routes.some(function (fn) {
-    return fn(url, method, req, res);
+  var foundHandlers = this.routes.map(function (handler) {
+    return handler(method, path);
+  }).filter(function (handler) {
+    return handler;
   });
 
-  if (isRouteFound) {
+  // Create a next callback which iterates through middlewares
+  var idx = 0;
+  function next (err) {
+    var func = foundHandlers[idx];
+    idx++;
+
+    if (err) {
+      func(err, req, res, next);
+    } else {
+      func(req, res, next);
+    }
+  }
+
+  if (foundHandlers.length > 0) {
     // Store the history
     this.history.push({
       method: method,
@@ -199,7 +228,11 @@ function go (path, opts) {
     // Reset scroll position
     window.scrollTo(0,0);
 
-    // return true to prevent default navigation
+    // Iterate through the middlewares and routes
+    next();
+
+    // Return true so it's easy to determine if a route was found
+    // This means we can do things like `preventDefault` on events
     return true;
   } else {
     return false;
@@ -219,6 +252,7 @@ module.exports = function clientRouter (opts) {
 
   var domEventHandler, router;
 
+  // Setup the context
   var ctx = {
     routes: [],
     history: [],
@@ -241,11 +275,11 @@ module.exports = function clientRouter (opts) {
 
   // Expose the router API
   router = {
-    get: handler.bind(ctx, "get"),
-    post: handler.bind(ctx, "post"),
-    put: handler.bind(ctx, "put"),
-    delete: handler.bind(ctx, "delete"),
-    use: handler.bind(ctx, "use"),
+    get: addRouteHandler.bind(ctx, "get"),
+    post: addRouteHandler.bind(ctx, "post"),
+    put: addRouteHandler.bind(ctx, "put"),
+    delete: addRouteHandler.bind(ctx, "delete"),
+    use: addRouteHandler.bind(ctx, "use"),
     go: go.bind(ctx),
     removeDomEventHandler: removeDomEventHandler,
     history: historyEnv

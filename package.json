@@ -5,6 +5,7 @@
   "main": "./server.js",
   "browser": "./browser.js",
   "scripts": {
+    "start": "node ./example/server.js",
     "test": "mocha test/index.js"
   },
   "repository": {
