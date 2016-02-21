@@ -134,11 +134,13 @@ Listen for PUT on the server and form submissions on the client and trigger the 
 
 Listen for DELETE on the server and form submissions on the client and trigger the handler.
 
-## Browser implementation detail
+## Event handling
 
-It is worth noting that isorouter adds various delegate handlers into the window object of the browser. These are designed to make it easy to handle a tags and form submissions.
+IsoRouter can add delegate handlers into the window object of the browser. These are designed to make it easy to handle a tags and form submissions.
 
-See `lib/browser-inject.js` for details.
+This is done by adding the options `var router = isoRouter({inject: true})` when creating the router instance.
+
+See `lib/browser-inject.js` for details on event handling.
 
 `<a>` tags
 

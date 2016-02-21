@@ -73,7 +73,12 @@ router.put("/user", function (req, res, next) {
   }
 });
 
-router.use("/*", function (err, req, res) {
+router.use("/*", function (req, res, next) {
+  res.locals.middleware4 = true;
+  next();
+});
+
+router.use("/*", function (err, req, res, next) {
   res.renderReact(Error, {
     error: err
   });

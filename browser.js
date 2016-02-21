@@ -64,14 +64,6 @@ function addRouteHandler (method, path, fn) {
       return false;
     }
 
-    // Parse the url and extrac the params
-    var parsedUrl = Url.parse(_path, true);
-
-    var params = {};
-    keys.forEach(function (key, idx) {
-      params[key.name] = results[idx+1];
-    });
-
     return function handler () {
       var err, req, res, next;
       if (arguments.length === 4) {
@@ -85,14 +77,19 @@ function addRouteHandler (method, path, fn) {
         next = arguments[2];
       }
 
+      var params = {};
+      keys.forEach(function (key, idx) {
+        params[key.name] = results[idx+1];
+      });
       req.params = params;
 
-      req.path  = parsedUrl.pathname;
-      req.query = parsedUrl.query;
-      req.url   = parsedUrl.pathname + "?" + Qs.stringify(parsedUrl.query);
-
       if (err) {
-        return fn(err, req, res, next);
+        // Bypass any handlers which don't accept the express error argument signature
+        if (fn.length < 4) {
+          next(err);
+        } else {
+          return fn(err, req, res, next);
+        }
       } else {
         return fn(req, res, next);
       }
@@ -151,7 +148,10 @@ function go (path, opts) {
     __id: uid++,
     body: body,
     locals: locals,
-    originalUrl: url
+    originalUrl: url,
+    path: parsedUrl.pathname,
+    query: parsedUrl.query,
+    url: parsedUrl.pathname + "?" + Qs.stringify(parsedUrl.query)
   };
 
   // response object, similar to express
