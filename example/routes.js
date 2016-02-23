@@ -21,15 +21,17 @@ var user = {
 // Middleware to setup render method
 router.use(function (req, res, next) {
   res.renderReact = function (element, data) {
+    var wrappedElement = React.createElement(elements.layout, data,
+      React.createElement(element, data)
+    );
     if (typeof window !== "undefined" && global === window) {
-      console.log("client render");
       ReactDom.render(
-        React.createElement(element, data),
+        wrappedElement,
         document.querySelector(".app")
       );
     } else {
       console.log("server render");
-      var html = ReactDomServer.renderToString(React.createElement(element, data));
+      var html = ReactDomServer.renderToString(wrappedElement);
       res.render("index", {html: html});
     }
   };

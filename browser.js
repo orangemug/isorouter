@@ -239,7 +239,9 @@ function go (path, opts) {
  * @returns {Void} no return
  */
 function addListener (eventName, func) {
-  this.listeners[eventName].push(func);
+  if (this.listeners[eventName]) {
+    this.listeners[eventName].push(func);
+  }
 }
 
 /**
@@ -257,8 +259,8 @@ module.exports = function clientRouter (opts) {
   var ctx = {
     // Store for event listeners
     listeners: {
-      onNavigate: [], // event listeners for navigation events
-      onError: [] // event listeners for error events
+      navigate: [], // event listeners for navigation events
+      error: [] // event listeners for error events
     },
     // Trigger an event to all relevant listeners
     emit: function () {

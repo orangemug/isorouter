@@ -11,9 +11,6 @@ var bodyParser     = require("body-parser");
 var exphbs         = require("express-handlebars");
 var routes         = require("./routes");
 
-// NOTE: Must be after the requires because it's quite strict on the AST
-require("node-jsx").install();
-
 
 var argv = yargs
   .describe("port", "port to start server on")
