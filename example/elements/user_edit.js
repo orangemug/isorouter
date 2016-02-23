@@ -2,34 +2,36 @@ var React = require("react");
 
 
 module.exports = React.createClass({
-  render: function() {
+  render: function () {
     return (
       <div>
-        <h1>Users</h1>
+        <h1><a href="/user">User</a>: Edit</h1>
         <form method="post" action="/user?_method=put">
           <div>
-            <label>First</label>
+            <label htmlFor="firstName">First</label>
             <input
               name="firstName"
               type="text"
+              id="firstName"
               defaultValue={this.props.firstName}
             />
           </div>
           <div>
-            <label>Last</label>
+            <label htmlFor="lastName">Last</label>
             <input
               name="lastName"
               type="text"
+              id="lastName"
               defaultValue={this.props.lastName}
             />
           </div>
           <div>
-            <label>Trigger Error</label>
-            <input type="checkbox" name="triggerErr" />
+            <label htmlFor="triggerErr">Trigger Error</label>
+            <input type="checkbox" name="triggerErr" id="triggerErr" />
           </div>
           <input type="submit" />
         </form>
       </div>
-    )
+    );
   }
 });

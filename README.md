@@ -112,6 +112,16 @@ Exports an object with functionality to manipulate push state history.
 * `forward()` - go to the next page in push state (if present)
 * `redirect(url, state)` - go to a url and replace the existing pushstate
 
+`router.on()`
+
+Emits navigation events of `beforeNavigate` and `afterNavigate`.
+
+```js
+router.on("beforeNavigate", function (req, res) {
+  // do something
+});
+```
+
 ### Isomorphic functions
 
 `router.use(url, middleware)`

@@ -2,11 +2,11 @@ var React = require("react");
 
 
 module.exports = React.createClass({
-  render: function() {
+  render: function () {
     return (
       <div>
-        <h1>Users</h1>
-        <a href="/user/edit?foo=bar">Edit</a>
+        <h1><a href="/">Home</a>: User</h1>
+        <a href="/user/edit">Edit</a>
         <div>
           <label>First: </label>
           <span>{this.props.firstName}</span>
@@ -16,6 +16,6 @@ module.exports = React.createClass({
           <span>{this.props.lastName}</span>
         </div>
       </div>
-    )
+    );
   }
 });
