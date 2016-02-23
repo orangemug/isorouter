@@ -6,9 +6,9 @@ module.exports = React.createClass({
       <div>
         <h1>Error</h1>
         <p>
-          {this.props.error}
+          {this.props.err.message}
         </p>
       </div>
-    )
+    );
   }
-})
+});

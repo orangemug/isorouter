@@ -1,9 +1,8 @@
 var isorouter = require("../");
 var React = require("react");
-var User = require("./elements/user");
-var UserEdit = require("./elements/user_edit");
-var Root = require("./elements/root");
-var Error = require("./elements/error");
+var ReactDom = require("react-dom");
+var ReactDomServer = require("react-dom/server");
+var elements = require("./elements");
 
 var router = isorouter({
   inject: true
@@ -15,39 +14,54 @@ var user = {
   lastName: "Blair"
 };
 
+//
+// Middleware handlers
+//
+
+// Middleware to setup render method
 router.use(function (req, res, next) {
-  req.locals.middleware1 = true;
   res.renderReact = function (element, data) {
-    React.render(
-      React.createElement(element, data),
-      document.querySelector(".app")
+    var wrappedElement = React.createElement(elements.layout, data,
+      React.createElement(element, data)
     );
+    if (typeof window !== "undefined" && global === window) {
+      ReactDom.render(
+        wrappedElement,
+        document.querySelector(".app")
+      );
+    } else {
+      console.log("server render");
+      var html = ReactDomServer.renderToString(wrappedElement);
+      res.render("index", {html: html});
+    }
   };
   next();
 });
 
-router.use("/*", function (req, res, next) {
+// Middleware to setup req.locals and trigger async middleware
+router.use(function (req, res, next) {
+  req.locals = {};
   setTimeout(function () {
-    if (!req.locals.middleware1) {
-      next(new Error("middleware 1 was not processed"));
-    } else {
-      req.locals.middleware2 = true;
-      next();
-    }
+    req.locals.middleware1 = true;
+    next();
   }, 200);
 });
 
-router.use("/*", function (req, res, next) {
-  req.locals.middleware3 = true;
-  if (!req.locals.middleware2) {
-    next(new Error("middleware 2 was not processed"));
+// Middleware to test async middleware handling
+router.use(function (req, res, next) {
+  if (!req.locals.middleware1) {
+    next(new Error("middleware 1 was not processed"));
   } else {
     next();
   }
 });
 
+//
+// Route handlers
+//
+
 router.get("/", function (req, res) {
-  res.renderReact(Root, {
+  res.renderReact(elements.root, {
     links: [
       {name: "User", href: "/user"}
     ]
@@ -55,11 +69,11 @@ router.get("/", function (req, res) {
 });
 
 router.get("/user", function (req, res) {
-  res.renderReact(User, user);
+  res.renderReact(elements.user, user);
 });
 
 router.get("/user/edit", function (req, res) {
-  res.renderReact(UserEdit, user);
+  res.renderReact(elements.userEdit, user);
 });
 
 router.put("/user", function (req, res, next) {
@@ -67,20 +81,19 @@ router.put("/user", function (req, res, next) {
   user.lastName  = req.body.lastName;
 
   if (req.body.triggerErr) {
-    next(new Error("Error triggered"));
+    next(new Error("Form error triggered"));
   } else {
-    res.renderReact(User, user);
+    res.renderReact(elements.user, user);
   }
 });
 
-router.use("/*", function (req, res, next) {
-  res.locals.middleware4 = true;
-  next();
-});
+//
+// Error handlers
+//
 
-router.use("/*", function (err, req, res, next) {
-  res.renderReact(Error, {
-    error: err
+router.use(function (err, req, res, next) {
+  res.renderReact(elements.error, {
+    err: err
   });
 });
 

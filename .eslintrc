@@ -24,5 +24,11 @@
       },
     }],
     "quotes": [2, "double"]
+  },
+  "plugins": [
+    "react"
+  ],
+  "ecmaFeatures": {
+    "jsx": true
   }
 }

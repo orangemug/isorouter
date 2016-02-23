@@ -116,6 +116,11 @@ Exports an object with functionality to manipulate push state history.
 
 Add event listeners for events `navigate`, `error`. These are useful for creating page transitions and flash messages.
 
+```js
+router.on("beforeNavigate", function (req, res) {
+  // do something
+});
+```
 
 ### Isomorphic functions
 

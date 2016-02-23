@@ -1,13 +1,15 @@
+require("babel-register")({
+  presets: ["react"]
+});
+
+var path           = require("path");
 var express        = require("express");
 var yargs          = require("yargs");
 var browserify     = require("browserify");
 var methodOverride = require("method-override");
 var bodyParser     = require("body-parser");
 var exphbs         = require("express-handlebars");
-var reactify       = require("reactify");
-
-// NOTE: Must be after the requires because it's quite strict on the AST
-require("node-jsx").install();
+var routes         = require("./routes");
 
 
 var argv = yargs
@@ -30,17 +32,15 @@ app.engine("handlebars", exphbs({}));
 app.set("view engine", "handlebars");
 
 
-// HACK: Should be in the module itself
+// Serve the JavaScript SPA to the browser
 app.use("/app.js", function (req, res) {
   var b = browserify();
-  b.transform(reactify);
-  b.add(__dirname+"/client.js");
+  b.transform("babelify", {presets: ["react"]});
+  b.add(path.join(__dirname, "client.js"));
   b.bundle().pipe(res);
 });
 
-app.use("/*", function (req, res) {
-  res.render("index");
-});
+app.use(routes);
 
 var server = app.listen(argv.port, function () {
   var host = server.address().address;

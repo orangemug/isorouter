@@ -3,7 +3,7 @@ var pathToRegexp = require("path-to-regexp");
 var browserEnv   = require("./lib/dom_event_handler");
 var historyEnv   = require("./lib/history");
 var Qs           = require("qs");
-var urlParser      = require("./lib/url_parser");
+var urlParser    = require("./lib/url_parser");
 
 /**
  * handler - create a route handler
@@ -78,7 +78,11 @@ function addRouteHandler (method, path, fn) {
           fn(err, req, res, next);
         }
       } else {
-        fn(req, res, next);
+        if (fn.length < 4) {
+          fn(req, res, next);
+        } else {
+          next();
+        }
       }
     };
   }
@@ -196,6 +200,8 @@ function go (path, opts) {
     idx++;
 
     if (err) {
+      // Trigger the before navigate event
+      self.emit("error", err, req, res);
       func(err, req, res, next);
     } else {
       func(req, res, next);
@@ -203,6 +209,9 @@ function go (path, opts) {
   }
 
   if (foundHandlers.length > 0) {
+    // Trigger the before navigate event
+    this.emit("navigate", req, res);
+
     // Store the history
     this.history.push({
       method: method,
@@ -223,7 +232,17 @@ function go (path, opts) {
   }
 }
 
-
+/**
+ * add an event listener
+ * @param {String}  eventName    name of event to listen for
+ * @param {Function}  func       function to trigger on event
+ * @returns {Void} no return
+ */
+function addListener (eventName, func) {
+  if (this.listeners[eventName]) {
+    this.listeners[eventName].push(func);
+  }
+}
 
 /**
  * clientRouter - create an express compliant router for use in the browser
@@ -238,6 +257,21 @@ module.exports = function clientRouter (opts) {
 
   // Setup the context
   var ctx = {
+    // Store for event listeners
+    listeners: {
+      navigate: [], // event listeners for navigation events
+      error: [] // event listeners for error events
+    },
+    // Trigger an event to all relevant listeners
+    emit: function () {
+      var args = Array.prototype.slice.call(arguments);
+      var eventName = args[0];
+      if (this.listeners[eventName]) {
+        this.listeners[eventName].forEach(function (listener) {
+          listener.call(args.slice(1));
+        });
+      }
+    },
     routes: [], // Array of route handlers to be run through on each request
     history: [], // Array of objects containing request method and path
     selfRedirectCount: 0, // Count of how many times the same url has been hit
@@ -258,6 +292,7 @@ module.exports = function clientRouter (opts) {
     delete: addRouteHandler.bind(ctx, "delete"),
     use: addRouteHandler.bind(ctx, "use"),
     go: go.bind(ctx),
+    on: addListener.bind(ctx),
     removeDomEventHandler: removeDomEventHandler,
     history: historyEnv
   };
