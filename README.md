@@ -112,6 +112,11 @@ Exports an object with functionality to manipulate push state history.
 * `forward()` - go to the next page in push state (if present)
 * `redirect(url, state)` - go to a url and replace the existing pushstate
 
+`router.on()`
+
+Add event listeners for events `navigate`, `error`. These are useful for creating page transitions and flash messages.
+
+
 ### Isomorphic functions
 
 `router.use(url, middleware)`
