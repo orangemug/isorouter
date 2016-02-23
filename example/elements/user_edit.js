@@ -23,6 +23,10 @@ module.exports = React.createClass({
               defaultValue={this.props.lastName}
             />
           </div>
+          <div>
+            <label>Trigger Error</label>
+            <input type="checkbox" name="triggerErr" />
+          </div>
           <input type="submit" />
         </form>
       </div>
