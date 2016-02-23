@@ -15,7 +15,7 @@ var user = {
   lastName: "Blair"
 };
 
-router.use("/*", function (req, res, next) {
+router.use(function (req, res, next) {
   req.locals.middleware1 = true;
   res.renderReact = function (element, data) {
     React.render(
