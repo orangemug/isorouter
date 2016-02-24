@@ -2,7 +2,6 @@ var Url          = require("url");
 var pathToRegexp = require("path-to-regexp");
 var browserEnv   = require("./lib/dom_event_handler");
 var historyEnv   = require("./lib/history");
-var Qs           = require("qs");
 var urlParser    = require("./lib/url_parser");
 
 /**
@@ -135,12 +134,13 @@ function go (path, opts) {
   // request object, similar to express
   var req = {
     __id: this.reqIdx++,
+    method: method,
     body: body,
     locals: locals,
     originalUrl: url,
     path: parsedUrl.pathname,
     query: parsedUrl.query,
-    url: parsedUrl.pathname + "?" + Qs.stringify(parsedUrl.query)
+    url: url
   };
 
   // response object, similar to express
@@ -188,7 +188,7 @@ function go (path, opts) {
 
   // Find the matching route based on url and method
   var foundHandlers = this.routes.map(function (handler) {
-    return handler(method, path);
+    return handler(req.method, req.path);
   }).filter(function (handler) {
     return handler;
   });
