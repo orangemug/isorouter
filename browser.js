@@ -103,6 +103,11 @@ function addRouteHandler (method, path, fn) {
 function go (path, opts) {
   var self = this;
 
+  // If not navigating anywhere return
+  if (!path || path === "") {
+    return false;
+  }
+
   opts = opts || {};
 
   var method = opts.method || "get";
