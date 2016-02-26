@@ -185,7 +185,7 @@ function go (path, opts) {
 
       return go.call(self, address, {
         silent: redirectOpts.silent,
-        replace: redirectOpts.replace,
+        replace: shouldReplaceHistory,
         body: body,
         locals: locals
       });
