@@ -111,8 +111,17 @@ function go (path, opts) {
   opts = opts || {};
 
   var method = opts.method || "get";
-  var silent = opts.silent || false;
-  var replace = opts.replace || false;
+
+  var silent = false;
+  if (opts.silent !== undefined) {
+    silent = opts.silent;
+  }
+
+  var replace = false;
+  if (opts.replace !== undefined) {
+    replace = opts.replace;
+  }
+
   var body = opts.body || {};
   var locals = opts.locals || {};
 
@@ -154,7 +163,9 @@ function go (path, opts) {
     redirect: function (url) {
       var address = url;
       var status = 302;
-      var opts = {};
+
+      // If no replace is specified, defualt to true
+      var shouldReplaceHistory = opts.replace !== undefined ? opts.replace : true;
 
       // allow status / url
       if (arguments.length === 2) {
@@ -172,10 +183,10 @@ function go (path, opts) {
       this.statusCode = status;
 
       return go.call(self, address, {
-        silent: opts.silent,
-        replace: opts.replace,
-        body: opts.body,
-        locals: opts.locals
+        silent: silent,
+        replace: shouldReplaceHistory,
+        body: body,
+        locals: locals
       });
     }
   };
