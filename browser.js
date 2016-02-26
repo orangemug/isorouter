@@ -113,12 +113,12 @@ function go (path, opts) {
   var method = opts.method || "get";
 
   var silent = false;
-  if (opts.silent !== undefined) {
+  if (typeof opts.silent !== "undefined") {
     silent = opts.silent;
   }
 
   var replace = false;
-  if (opts.replace !== undefined) {
+  if (typeof opts.replace !== "undefined") {
     replace = opts.replace;
   }
 
@@ -163,9 +163,7 @@ function go (path, opts) {
     redirect: function (url) {
       var address = url;
       var status = 302;
-
-      // If no replace is specified, defualt to true
-      var shouldReplaceHistory = opts.replace !== undefined ? opts.replace : true;
+      var redirectOpts = {};
 
       // allow status / url
       if (arguments.length === 2) {
@@ -178,13 +176,16 @@ function go (path, opts) {
       } else if (arguments.length === 3) {
         address = arguments[0];
         status = arguments[1];
-        opts = arguments[2];
+        redirectOpts = arguments[2];
       }
       this.statusCode = status;
 
+      // If no replace is specified, defualt to true
+      var shouldReplaceHistory = typeof redirectOpts.replace === "undefined" ? redirectOpts.replace : true;
+
       return go.call(self, address, {
-        silent: silent,
-        replace: shouldReplaceHistory,
+        silent: redirectOpts.silent,
+        replace: redirectOpts.replace,
         body: body,
         locals: locals
       });
@@ -192,13 +193,13 @@ function go (path, opts) {
   };
 
   // opts.replace will replace the url without without triggering the route
-  if (replace) {
+  if (replace === true) {
     historyEnv.redirect(url);
     return true;
   }
 
   // opts.silent will trigger the route without changing the url
-  if (!silent) {
+  if (silent === false) {
     historyEnv.go(url);
   }
 
