@@ -181,7 +181,7 @@ function go (path, opts) {
       this.statusCode = status;
 
       // If no replace is specified, defualt to true
-      var shouldReplaceHistory = typeof redirectOpts.replace === "undefined" ? redirectOpts.replace : true;
+      var shouldReplaceHistory = typeof redirectOpts.replace !== "undefined" ? redirectOpts.replace : true;
 
       return go.call(self, address, {
         silent: redirectOpts.silent,
