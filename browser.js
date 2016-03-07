@@ -122,6 +122,11 @@ function go (path, opts) {
     replace = opts.replace;
   }
 
+  var redirect = false;
+  if (typeof opts.redirect !== "undefined") {
+    redirect = opts.redirect;
+  }
+
   var body = opts.body || {};
   var locals = opts.locals || {};
 
@@ -181,11 +186,11 @@ function go (path, opts) {
       this.statusCode = status;
 
       // If no replace is specified, defualt to true
-      var shouldReplaceHistory = typeof redirectOpts.replace !== "undefined" ? redirectOpts.replace : true;
-
+      var shouldRedirect = typeof redirectOpts.redirect !== "undefined" ? redirectOpts.redirect : true;
       return go.call(self, address, {
         silent: redirectOpts.silent,
-        replace: shouldReplaceHistory,
+        replace: redirectOpts.replace,
+        redirect: shouldRedirect,
         body: body,
         locals: locals
       });
@@ -201,6 +206,11 @@ function go (path, opts) {
   // opts.silent will trigger the route without changing the url
   if (silent === false) {
     historyEnv.go(url);
+  }
+
+  // opts.redirect will replace the last url and trigger the route
+  if (redirect === true) {
+    historyEnv.redirect(url);
   }
 
   // Find the matching route based on url and method
