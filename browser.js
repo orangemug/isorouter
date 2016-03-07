@@ -203,15 +203,15 @@ function go (path, opts) {
     return true;
   }
 
-  // opts.silent will trigger the route without changing the url
-  if (silent === false) {
-    historyEnv.go(url);
-  }
-
   // opts.redirect will replace the last url and trigger the route
   if (redirect === true) {
     historyEnv.redirect(url);
   }
+  // opts.silent will trigger the route without changing the url
+  else if (silent === false) {
+    historyEnv.go(url);
+  }
+
 
   // Find the matching route based on url and method
   var foundHandlers = this.routes.map(function (handler) {
