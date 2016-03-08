@@ -1,43 +1,8 @@
 var Url          = require("url");
-var pathToRegexp = require('path-to-regexp');
-var browserEnv   = require("./lib/browser-inject");
+var pathToRegexp = require("path-to-regexp");
+var browserEnv   = require("./lib/dom_event_handler");
 var historyEnv   = require("./lib/history");
-var Qs           = require("qs");
-
-/**
- * make a url from an href or action attribute into a url isoRouter can handle
- *
- * If clicking a link on a page hosted at /land?animal=badger#grass
- *
- * If a host or pathname there is enough to route
- * /sea                    -> /sea
- * /sea#weed               -> /sea#weed
- * /sea?fish=flounder      -> /sea?fish=flounder
- * /sea?fish=flounder#weed -> /sea?fish=flounder#weed
- *
- * If only a search query is given it is intended to be relative to the current path
- * ?fish=flounder          -> /land?fish=flounder
- * ?fish=flounder#weed     -> /land?fish=flounder#weed
- *
- * If only a hash is given it is intended to be relative to the current search query
- * #sea                    -> /land?animal=badger#sea
- *
- * @param {String}  url     input url to normalize
- * @returns {String} normalized url ensuring hash, search and path are appropriate
- */
-function tidyUrl(url) {
-  var urlParsed = Url.parse(url, true);
-
-  if (!urlParsed.host && !urlParsed.pathname) {
-    urlParsed.pathname = window.location.pathname;
-
-    if (urlParsed.hash && !urlParsed.search) {
-      urlParsed.search = window.location.search;
-    }
-  }
-
-  return Url.format(urlParsed);
-}
+var urlParser    = require("./lib/url_parser");
 
 /**
  * handler - create a route handler
@@ -47,135 +12,330 @@ function tidyUrl(url) {
  * @param {Function}  next          call the next item in the middleware stack
  * @returns {undefined}
  */
-function handler(method, path, fn, next) {
+function addRouteHandler (method, path, fn) {
+
+  // If using router.use(middleware) then set a catch all path
+  if (!fn) {
+    fn = path;
+    path = "/*";
+  }
+
   var re = pathToRegexp(path);
   var keys = re.keys;
 
-  this.routes.push(function(_path, _method, req, res) {
+  /**
+   * Construct a routeHandler
+   * @param {String} _method     HTTP method of the incoming request
+   * @param {String} _path       url path of the incoming request
+   * @returns {false|Function} express like middleware
+   */
+  function routeHandler (_method, _path) {
+    // Check the method matches
+    if (method !== "use" && method !== _method) {
+      return false;
+    }
+
+    // Check the path matches
     var pathname = Url.parse(_path).pathname;
-
-    if(method !== "use" && method !== _method) {
-      return false;
-    }
-
     var results = re.exec(pathname);
-    if(!results) {
+    if (!results) {
       return false;
     }
 
-    var params = {};
-    keys.forEach(function(key, idx) {
-      params[key.name] = results[idx+1];
-    });
+    /**
+     * Wrap a route handler
+     * @param {Error} [err]        optional error denoting should pass request to error handling middleware
+     * @param {Object} req         request object
+     * @param {Object} res         response object
+     * @param {Function} next      continuation function called with an optional error param
+     * @returns {Void} next will be called
+     */
+    return function handler () {
+      var err, req, res, next;
+      if (arguments.length === 4) {
+        err = arguments[0];
+        req = arguments[1];
+        res = arguments[2];
+        next = arguments[3];
+      } else {
+        req = arguments[0];
+        res = arguments[1];
+        next = arguments[2];
+      }
 
-    req.params = params;
+      var params = {};
+      keys.forEach(function (key, idx) {
+        params[key.name] = results[idx+1];
+      });
+      req.params = params;
 
-    var urlParsed = Url.parse(_path, true);
+      if (err) {
+        // Bypass any handlers which don't accept the express error argument signature
+        if (fn.length < 4) {
+          next(err);
+        } else {
+          fn(err, req, res, next);
+        }
+      } else {
+        if (fn.length < 4) {
+          fn(req, res, next);
+        } else {
+          next();
+        }
+      }
+    };
+  }
 
-    req.path  = urlParsed.pathname;
-    req.query = urlParsed.query;
-    req.url   = urlParsed.pathname + "?" + Qs.stringify(urlParsed.query);
-
-    if(method === "use") {
-      // HACK: next
-      fn(req, res, function() {});
-      return false;
-    } else {
-      fn(req, res);
-      return true;
-    }
-  });
+  this.routes.push(routeHandler);
 }
-
-var uid = 0;
 
 /**
  * go - peform a request to router
  * @param {String}    path          path to navigate to
- * @param {String}    method        http method (GET, POST, PUT, DELETE)
- * @param {Boolean}   silent        if silent the item isn't added to pushstate history
- * @param {Object}    body          request body to send
+ * @param {Object}    opts          navigation options
+ * @param {String}    opts.method   http method (GET, POST, PUT, DELETE)
+ * @param {Boolean}   opts.replace  replace the last item in pushstate history
+ * @param {Boolean}   opts.silent   if silent the router handler isn't triggered
+ * @param {Object}    opts.body     request body to send
+ * @param {Object}    opts.locals   extra data such as a flash message
  * @returns {Boolean} if the request was sent
  */
-function go(path, method, silent, body) {
+function go (path, opts) {
   var self = this;
-  method = method || "get";
 
-  path = tidyUrl(path);
+  // If not navigating anywhere return
+  if (!path || path === "") {
+    return false;
+  }
 
+  opts = opts || {};
+
+  var method = opts.method || "get";
+
+  var silent = false;
+  if (typeof opts.silent !== "undefined") {
+    silent = opts.silent;
+  }
+
+  var replace = false;
+  if (typeof opts.replace !== "undefined") {
+    replace = opts.replace;
+  }
+
+  var redirect = false;
+  if (typeof opts.redirect !== "undefined") {
+    redirect = opts.redirect;
+  }
+
+  var body = opts.body || {};
+  var locals = opts.locals || {};
+
+  var parsedUrl = urlParser(path);
+  var url = parsedUrl.format(parsedUrl);
+
+  // If redirecting to self catch and do a full navigation
+  var lastRoute = this.history[this.history.length - 1];
+  if (lastRoute && lastRoute.method === method && lastRoute.path === url) {
+    if (this.selfRedirectCount >= 50) {
+      console.warn("isoRouter: Tried to navigate to same path more than 50 times.");
+      return false;
+    } else {
+      this.selfRedirectCount++;
+    }
+  }
+
+  // If navigating to a different host then want to do full navigation
+  if ((parsedUrl.host && window.location && parsedUrl.host !== window.location.hostname) || opts.hard) {
+    window.location.href = url;
+    return false;
+  }
+
+  // request object, similar to express
   var req = {
-    __id: uid++,
-    body: body
+    __id: this.reqIdx++,
+    method: method,
+    body: body,
+    locals: locals,
+    originalUrl: url,
+    path: parsedUrl.pathname,
+    query: parsedUrl.query,
+    url: url
   };
+
+  // response object, similar to express
   var res = {
-    redirect: function(_path) {
-      go.call(self, _path, "get");
-      return;
+    // Mimic functionality of express res.redirect
+    redirect: function (url) {
+      var address = url;
+      var status = 302;
+      var redirectOpts = {};
+
+      // allow status / url
+      if (arguments.length === 2) {
+        if (typeof arguments[0] === "number") {
+          status = arguments[0];
+          address = arguments[1];
+        } else {
+          status = arguments[1];
+        }
+      } else if (arguments.length === 3) {
+        address = arguments[0];
+        status = arguments[1];
+        redirectOpts = arguments[2];
+      }
+      this.statusCode = status;
+
+      // If no replace is specified, defualt to true
+      var shouldRedirect = typeof redirectOpts.redirect !== "undefined" ? redirectOpts.redirect : true;
+      return go.call(self, address, {
+        silent: redirectOpts.silent,
+        replace: redirectOpts.replace,
+        redirect: shouldRedirect,
+        body: body,
+        locals: locals
+      });
     }
   };
 
-  if(!silent) {
-    historyEnv.go(path);
+  // opts.replace will replace the url without without triggering the route
+  if (replace === true) {
+    historyEnv.redirect(url);
+    return true;
   }
 
-  var isRouteFound = this.routes.some(function(fn) {
-    return fn(path, method, req, res);
+  // opts.redirect will replace the last url and trigger the route
+  if (redirect === true) {
+    historyEnv.redirect(url);
+  }
+  // opts.silent will trigger the route without changing the url
+  else if (silent === false) {
+    historyEnv.go(url);
+  }
+
+
+  // Find the matching route based on url and method
+  var foundHandlers = this.routes.map(function (handler) {
+    return handler(req.method, req.path);
+  }).filter(function (handler) {
+    return handler;
   });
 
-  if (isRouteFound) {
+  // Create a next callback which iterates through middlewares
+  var idx = 0;
+  function next (err) {
+    var func = foundHandlers[idx];
+    idx++;
+
+    if (err) {
+      // Trigger the before navigate event
+      self.emit("error", err, req, res);
+      func(err, req, res, next);
+    } else {
+      func(req, res, next);
+    }
+  }
+
+  if (foundHandlers.length > 0) {
+    // Trigger the before navigate event
+    this.emit("navigate", req, res);
+
+    // Store the history
+    this.history.push({
+      method: method,
+      path: url
+    });
+
     // Reset scroll position
     window.scrollTo(0,0);
 
-    // return true to prevent default navigation
+    // Iterate through the middlewares and routes
+    next();
+
+    // Return true so it's easy to determine if a route was found
+    // This means we can do things like `preventDefault` on events
     return true;
   } else {
     return false;
   }
 }
 
-
+/**
+ * add an event listener
+ * @param {String}  eventName    name of event to listen for
+ * @param {Function}  func       function to trigger on event
+ * @returns {Void} no return
+ */
+function addListener (eventName, func) {
+  if (this.listeners[eventName]) {
+    this.listeners[eventName].push(func);
+  }
+}
 
 /**
  * clientRouter - create an express compliant router for use in the browser
  * @param {Object}  opts           router configuration options
  * @param {String}  opts.inject    dom selector for element to replace on navigation
- * @return {Object} express router
+ * @returns {Object} express router
  */
 module.exports = function clientRouter (opts) {
   opts = opts || {};
 
-  var env, router;
+  var domEventHandler, router;
 
+  // Setup the context
   var ctx = {
-    routes: []
+    // Store for event listeners
+    listeners: {
+      navigate: [], // event listeners for navigation events
+      error: [] // event listeners for error events
+    },
+    // Trigger an event to all relevant listeners
+    emit: function () {
+      var args = Array.prototype.slice.call(arguments);
+      var eventName = args[0];
+      if (this.listeners[eventName]) {
+        this.listeners[eventName].forEach(function (listener) {
+          listener.call(args.slice(1));
+        });
+      }
+    },
+    routes: [], // Array of route handlers to be run through on each request
+    history: [], // Array of objects containing request method and path
+    selfRedirectCount: 0, // Count of how many times the same url has been hit
+    reqIdx: 0 // incrementing count of each request
   };
 
-  function destroy() {
-    if(env) {
-      env.destroy();
+  function removeDomEventHandler () {
+    if (domEventHandler) {
+      domEventHandler.destroy();
     }
   }
 
-  window.addEventListener("popstate", function(e) {
-    var url = document.location.pathname + document.location.search;
-    go.call(ctx, url, "get", true);
-  });
-
+  // Expose the router API
   router = {
-    get: handler.bind(ctx, "get"),
-    post: handler.bind(ctx, "post"),
-    put: handler.bind(ctx, "put"),
-    delete: handler.bind(ctx, "delete"),
-    use: handler.bind(ctx, "use"),
+    get: addRouteHandler.bind(ctx, "get"),
+    post: addRouteHandler.bind(ctx, "post"),
+    put: addRouteHandler.bind(ctx, "put"),
+    delete: addRouteHandler.bind(ctx, "delete"),
+    use: addRouteHandler.bind(ctx, "use"),
     go: go.bind(ctx),
-    destroy: destroy,
+    on: addListener.bind(ctx),
+    removeDomEventHandler: removeDomEventHandler,
     history: historyEnv
   };
 
-  if(opts.inject) {
-    env = browserEnv.call(router, opts.inject);
+  // When the url changes (such as back button) want to trigger the appropriate handler
+  window.addEventListener("popstate", function () {
+    var url = document.location.pathname + document.location.search;
+    router.go(url, {
+      silent: true
+    });
+  });
+
+  // Injects a delegate event listener onto window or a specific node
+  if (opts.inject) {
+    domEventHandler = browserEnv.call(router, opts.inject);
   }
 
   return router;
 };
-

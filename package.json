@@ -1,10 +1,11 @@
 {
   "name": "isorouter",
   "description": "Isomorphic express like router.",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "main": "./server.js",
   "browser": "./browser.js",
   "scripts": {
+    "start": "node ./example/server.js",
     "test": "mocha test/index.js"
   },
   "repository": {
@@ -18,20 +19,25 @@
     }
   ],
   "devDependencies": {
+    "babel": "^6.5.2",
+    "babel-preset-react": "^6.5.0",
+    "babel-register": "^6.5.2",
+    "babelify": "^7.2.0",
     "body-parser": "^1.13.3",
     "browserify": "^11.0.1",
+    "eslint": "^1.10.3",
+    "eslint-plugin-react": "^4.0.0",
     "express-handlebars": "^2.0.1",
     "method-override": "^2.3.5",
     "mocha": "^2.2.4",
-    "node-jsx": "^0.13.3",
-    "react": "^0.13.3",
-    "reactify": "^1.1.1",
+    "react": "^0.14.7",
+    "react-dom": "^0.14.7",
     "yargs": "^3.19.0"
   },
   "dependencies": {
     "dom-delegate": "^2.0.3",
     "express": "^4.13.3",
-    "path-to-regexp": "^1.2.1",
-    "qs": "^4.0.0"
+    "lodash.set": "^4.0.0",
+    "path-to-regexp": "^1.2.1"
   }
 }
