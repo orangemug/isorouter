@@ -320,6 +320,7 @@ module.exports = function clientRouter (opts) {
     use: addRouteHandler.bind(ctx, "use"),
     go: go.bind(ctx),
     on: addListener.bind(ctx),
+    trigger: ctx.emit.bind(ctx),
     removeDomEventHandler: removeDomEventHandler,
     history: historyEnv
   };
