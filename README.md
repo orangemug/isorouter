@@ -1,29 +1,23 @@
 # isorouter
 ![stability-experimental](https://img.shields.io/badge/stability-experimental-orange.svg)
 
-A router which works both on the server (in express apps) and inside browsers.
-
-Isorouter actually exports two types of router depending on the environment but they are designed to have the same API so all downstream code runs in the same way.
+A router for both the client and the server with an express.js like API.
 
 ## How it works on the server
 
-`require("isorouter")` will return a vanilla express router.
-
-This router can be used as per an express router. However, it should only be used with isorouter compliant methods to ensure isomorphic compatibility.
+`require("isorouter")` will return a vanilla express router. However, it should only be used with isorouter compliant methods to ensure code will be compatibile.
 
 ## How it works on the browser
 
-When run on a client it is easiest to think of isorouter as mounting an express server into the browser itself. The browser provides the incoming requests to the router which are handled in an express like manner.
+When run on a client it is easiest to think of isorouter as mounting an express server into the browser itself. The browser provides the incoming requests to the router via the url (pushstate) which are handled in an express like manner.
 
-When building a JavaScript package with browserify `require("isorouter")` will return an clientRouter. This works because browserify uses the 'browser' value of `package.json` to load a script instead of the usual 'main' value.
+`require("isorouter")` will return an isoRouter. This mimics the functionality of express middleware and route matching.
 
-To mount the browserRouter into the browser it must be 'executed' using `router.go()`.
-
-This sets up delegate handlers to listen for events such as url changes, clicks on `a` tags and submit events from `form` tags. These events will trigger the router methods. 
+To start the app trigger the first route with `router.go(window.location)`.
 
 ## Usage
 
-## Create a router
+### Create an isomorphic router
 
 router.js
 ```js
@@ -32,7 +26,7 @@ router.js
  * Create a router
  */
 var router = isorouter({
-  inject: "#app" // on the client the #app element will be replaced
+  inject: true // Add event listeners to window which trigger navigation such as tags and forms
 });
 
 router.get("/users", function (req, res) {
@@ -42,7 +36,7 @@ router.get("/users", function (req, res) {
 module.exports = router;
 ```
 
-## Server usage
+### Server usage
 
 server.js
 ```js
@@ -70,14 +64,14 @@ app.listen(3000, function () {
 
 When a request comes into the express server isorouter will handle it like normal express middleware and result in a server side render.
 
-## Client usage
+### Client usage
 
 client.js
 ```js
 var router = require("./router");
 
 /*
- * Mount the router and start the app
+ * Trigger initial navigation
  */
 router.go();
 ```
@@ -93,9 +87,17 @@ In our example, if a user clicks a link such as `<a href="/users">Click here</a>
 
 ### Browser specific functions
 
-`router.go(url, method, silent, data)`
+`router.go(url, opts)`
 
-Go will mount the router into the browser and start listening for events and url changes. It will also do a first time trigger with the current url (via get).
+Performs a request to the router triggering any handlers listing on the given url.
+
+Options:
+
+* method: http method to call the url with such as `get`, `post`, `put`, `patch`, defaults to `get`.
+* body: object passed to handler as `req.body`
+* locals: object passed to handler as `req.locals`
+* silent: trigger navigation without adding to pushstate
+* replace: navigate replacing the last item in pushstate (useful for redirects to)
 
 `router.destroy()`
 
@@ -109,6 +111,16 @@ Exports an object with functionality to manipulate push state history.
 * `back()` - go the the previous page in push state (if present)
 * `forward()` - go to the next page in push state (if present)
 * `redirect(url, state)` - go to a url and replace the existing pushstate
+
+`router.on()`
+
+Add event listeners for events `navigate`, `error`. These are useful for creating page transitions and flash messages.
+
+```js
+router.on("beforeNavigate", function (req, res) {
+  // do something
+});
+```
 
 ### Isomorphic functions
 
@@ -132,11 +144,13 @@ Listen for PUT on the server and form submissions on the client and trigger the 
 
 Listen for DELETE on the server and form submissions on the client and trigger the handler.
 
-## Browser implementation detail
+## Event handling
 
-It is worth noting that isorouter adds various delegate handlers into the window object of the browser. These are designed to make it easy to handle a tags and form submissions.
+IsoRouter can add delegate handlers into the window object of the browser. These are designed to make it easy to handle a tags and form submissions.
 
-See `lib/browser-inject.js` for details.
+This is done by adding the options `var router = isoRouter({inject: true})` when creating the router instance.
+
+See `lib/browser-inject.js` for details on event handling.
 
 `<a>` tags
 
@@ -155,4 +169,3 @@ Click events on submit tags will be handled as per form tags.
 Currently the `clientRouter` doesn't support using `use` without a url. This can be easily overcome by using `router.use("/*", middleware)`.
 
 The form serialization can only create flat JSON objects. For nested objects your JS will have to build the JSON and call the routing directly. `router.go(url, method, false, {my: {nested: {json: "object"}}})`.
-
