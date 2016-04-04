@@ -191,8 +191,8 @@ function go (path, opts) {
         silent: redirectOpts.silent,
         replace: redirectOpts.replace,
         redirect: shouldRedirect,
-        body: body,
-        locals: locals
+        body: redirectOpts.body || body,
+        locals: redirectOpts.locals || locals
       });
     }
   };
