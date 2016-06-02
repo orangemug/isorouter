@@ -98,6 +98,7 @@ Options:
 * locals: object passed to handler as `req.locals`
 * silent: trigger navigation without adding to pushstate
 * replace: navigate replacing the last item in pushstate (useful for redirects to)
+* preventScrollReset: prevents the scroll position resetting on navigation.
 
 `router.destroy()`
 
@@ -163,6 +164,12 @@ Any submit event will be handled unless handled further down the dom with `stopP
 `<input type="submit">` tags
 
 Click events on submit tags will be handled as per form tags.
+
+By default clicking links will cause a scroll reset (`scrollTo(0, 0)`) if you want to prevent this you can add `data-prevent-scroll-reset` attriute to links, for example
+
+    <a href="?limit=10" data-prevent-scroll-reset="true">More</a>
+
+
 
 ## Gotchas
 
