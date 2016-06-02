@@ -5,13 +5,13 @@ A router for both the client and the server with an express.js like API.
 
 ## How it works on the server
 
-`require("isorouter")` will return a vanilla express router. However, it should only be used with isorouter compliant methods to ensure code will be compatibile.
+`require("isorouter")` will return a vanilla express router. However, it should only be used with isorouter compliant methods to ensure code will be compatible.
 
 ## How it works on the browser
 
 When run on a client it is easiest to think of isorouter as mounting an express server into the browser itself. The browser provides the incoming requests to the router via the url (pushstate) which are handled in an express like manner.
 
-`require("isorouter")` will return an isoRouter. This mimics the functionality of express middleware and route matching.
+`require("isorouter")` will return an isorouter. This mimics the functionality of express middleware and route matching.
 
 To start the app trigger the first route with `router.go(window.location)`.
 
@@ -109,7 +109,7 @@ Removes all delegate and url listeners.
 Exports an object with functionality to manipulate push state history.
 
 * `go(url)` - go to a given url
-* `back()` - go the the previous page in push state (if present)
+* `back()` - go back to the previous page in push state (if present)
 * `forward()` - go to the next page in push state (if present)
 * `redirect(url, state)` - go to a url and replace the existing pushstate
 
@@ -147,7 +147,7 @@ Listen for DELETE on the server and form submissions on the client and trigger t
 
 ## Event handling
 
-IsoRouter can add delegate handlers into the window object of the browser. These are designed to make it easy to handle a tags and form submissions.
+Isorouter can add delegate handlers into the window object of the browser. These are designed to make it easy to handle a tags and form submissions.
 
 This is done by adding the options `var router = isoRouter({inject: true})` when creating the router instance.
 
@@ -165,7 +165,7 @@ Any submit event will be handled unless handled further down the dom with `stopP
 
 Click events on submit tags will be handled as per form tags.
 
-By default clicking links will cause a scroll reset (`scrollTo(0, 0)`) if you want to prevent this you can add `data-prevent-scroll-reset` attriute to links, for example
+By default clicking links will cause a scroll reset (`scrollTo(0, 0)`) if you want to prevent this you can add `data-prevent-scroll-reset` attribute to links, for example
 
     <a href="?limit=10" data-prevent-scroll-reset="true">More</a>
 
