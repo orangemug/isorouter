@@ -30,6 +30,7 @@
     "express-handlebars": "^2.0.1",
     "method-override": "^2.3.5",
     "mocha": "^2.2.4",
+    "proxyquire": "^1.7.9",
     "react": "^0.14.7",
     "react-dom": "^0.14.7",
     "yargs": "^3.19.0"
