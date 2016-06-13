@@ -1,178 +1,79 @@
 # isorouter
-![stability-experimental](https://img.shields.io/badge/stability-experimental-orange.svg)
+Isorouter is a routing layer that works across the server/client and has an express like API.
 
-A router for both the client and the server with an express.js like API.
+[![circleci](https://circleci.com/gh/orangemug/isorouter.png?style=shield)][circleci]
+[![Dependency Status](https://david-dm.org/orangemug/isorouter.svg)][dm-prod]
+[![Dev Dependency Status](https://david-dm.org/orangemug/isorouter/dev-status.svg)][dm-dev]
 
-## How it works on the server
+[circleci]:  https://circleci.com/gh/orangemug/isorouter
+[dm-prod]:   https://david-dm.org/orangemug/isorouter
+[dm-dev]:    https://david-dm.org/orangemug/isorouter#info=devDependencies
 
-`require("isorouter")` will return a vanilla express router. However, it should only be used with isorouter compliant methods to ensure code will be compatible.
+Isorouter uses the [history api]() in the browser and can be mounted as a node http server (as well as being mounted inside express). Because isorouter is designed to work across server / client it drops support for things that only make sense on the server.
 
-## How it works on the browser
+Also unlike other express like routing it comes with no middleware enabled by default. For example `res.render` doesn't exist, this is mainly to keep things simplier and smaller on the client.
 
-When run on a client it is easiest to think of isorouter as mounting an express server into the browser itself. The browser provides the incoming requests to the router via the url (pushstate) which are handled in an express like manner.
+There are some example middlewares that you can include in the [middlewares](/middlewares) directory
 
-`require("isorouter")` will return an isorouter. This mimics the functionality of express middleware and route matching.
 
-To start the app trigger the first route with `router.go(window.location)`.
+## Install
+To install
+
+    npm install orangemug/isorouter --save
+
 
 ## Usage
+Initialize a router
 
-### Create an isomorphic router
+    var app = isorouter();
 
-router.js
-```js
+Define some rendering middleware. We are using `html` here which just returns plain html strings and on the client will replace the contents of the html page with `.innerHTML`.
 
-/*
- * Create a router
- */
-var router = isorouter({
-  inject: true // Add event listeners to window which trigger navigation such as tags and forms
-});
+    app.use(require("isorouter/middlewares/html")({
+      templates: [
+        home:    fs.readFileSync(__dirname+"/views/home.html"),
+        profile: fs.readFileSync(__dirname+"/views/profile.html")
+      ],
+      client: {
+        element: "#root"
+      }
+    }));
 
-router.get("/users", function (req, res) {
-    // call a function that renders on both client and server
-})
+Define our routes
 
-module.exports = router;
-```
+    app.get("/", function(req, res) {
+      res.render("home");
+    });
 
-### Server usage
+    // Define some sub-routes.
+    router.get("/profile", function() {
+      res.render("profile");
+    });
 
-server.js
-```js
-var isorouter = require("./router");
+Now lets hook up the server
 
-
-/*
- * Create an express app
- */
-var express = require("express");
-var app = express();
-
-/*
- * Mount the router
- */
-app.use(router)
-
-/*
- * Start the app
- */
-app.listen(3000, function () {
-  console.log("Started");
-});
-```
-
-When a request comes into the express server isorouter will handle it like normal express middleware and result in a server side render.
-
-### Client usage
-
-client.js
-```js
-var router = require("./router");
-
-/*
- * Trigger initial navigation
- */
-router.go();
-```
-
-In our example, if a user clicks a link such as `<a href="/users">Click here</a>` the event will propagate up and be handled by isorouter. It will:
-
-* prevent default navigation
-* change the url via pushstate
-* the router will pick up on the url change and run the associated handler.
-* The handler can call an isomorphic render to update the view/dom.
-
-## Reference
-
-### Browser specific functions
-
-`router.go(url, opts)`
-
-Performs a request to the router triggering any handlers listing on the given url.
-
-Options:
-
-* method: http method to call the url with such as `get`, `post`, `put`, `patch`, defaults to `get`.
-* body: object passed to handler as `req.body`
-* locals: object passed to handler as `req.locals`
-* silent: trigger navigation without adding to pushstate
-* replace: navigate replacing the last item in pushstate (useful for redirects to)
-* preventScrollReset: prevents the scroll position resetting on navigation.
-
-`router.destroy()`
-
-Removes all delegate and url listeners.
-
-`router.history`
-
-Exports an object with functionality to manipulate push state history.
-
-* `go(url)` - go to a given url
-* `back()` - go back to the previous page in push state (if present)
-* `forward()` - go to the next page in push state (if present)
-* `redirect(url, state)` - go to a url and replace the existing pushstate
-
-`router.on()`
-
-Add event listeners for events `navigate`, `error`. These are useful for creating page transitions and flash messages.
-
-```js
-router.on("beforeNavigate", function (req, res) {
-  // do something
-});
-```
-
-### Isomorphic functions
-
-`router.use(url, middleware)`
-
-Insert a middleware into the router which is run on all request methods (GET, POST, PUT etc). The middleware function will normally call `next(err)` at the end of it's execution to trigger the next middlware/handler.
-
-`router.get(url, handler)`
-
-Listen for get url's and trigger the handler.
-
-`router.post(url, handler)`
-
-Listen for POST on the server and form submissions on the client and trigger the handler.
-
-`router.put(url, handler)`
-
-Listen for PUT on the server and form submissions on the client and trigger the handler.
-
-`router.delete(url, handler)`
-
-Listen for DELETE on the server and form submissions on the client and trigger the handler.
-
-## Event handling
-
-Isorouter can add delegate handlers into the window object of the browser. These are designed to make it easy to handle a tags and form submissions.
-
-This is done by adding the options `var router = isoRouter({inject: true})` when creating the router instance.
-
-See `lib/browser-inject.js` for details on event handling.
-
-`<a>` tags
-
-Any <a> tag click will be handled unless it has a `target` set. This means all internal links will go through isorouter. To link to an external page or an internal page with a browser refresh add a `target`.
-
-`<form>` tags
-
-Any submit event will be handled unless handled further down the dom with `stopPropagation`. Isorouter will serialize the form into a flat json object and submit it as the request body to the router.
-
-`<input type="submit">` tags
-
-Click events on submit tags will be handled as per form tags.
-
-By default clicking links will cause a scroll reset (`scrollTo(0, 0)`) if you want to prevent this you can add `data-prevent-scroll-reset` attribute to links, for example
-
-    <a href="?limit=10" data-prevent-scroll-reset="true">More</a>
+    var server = require("isorouter/bootstrap")(app);
+    server.listen(8080);
 
 
+## API
+Work in progress API docs
 
-## Gotchas
 
-Currently the `clientRouter` doesn't support using `use` without a url. This can be easily overcome by using `router.use("/*", middleware)`.
+### Promises
+If you return a promise the routing will catch errors and pass them to the error handlers
 
-The form serialization can only create flat JSON objects. For nested objects your JS will have to build the JSON and call the routing directly. `router.go(url, method, false, {my: {nested: {json: "object"}}})`.
+    app.get("/", function(data) {
+      // Errors thrown here
+      return db.conn()
+        .get(1)
+        .then(function(data) {
+          res.send(data);
+        });
+    });
+
+**NOTE:** It won't do anything with the returned result. This is due to us wanting to allow partial rendering and streaming with wouldn't be possible via a returned promise result.
+
+
+## License
+[MIT](LICENSE)
