@@ -245,8 +245,10 @@ function go (path, opts) {
       path: url
     });
 
-    // Reset scroll position
-    window.scrollTo(0,0);
+    if(!opts.preventScrollReset) {
+      // Reset scroll position
+      window.scrollTo(0,0);
+    }
 
     // Iterate through the middlewares and routes
     next();
