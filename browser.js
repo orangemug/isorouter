@@ -155,6 +155,10 @@ function go (path, opts) {
     __id: this.reqIdx++,
     method: method,
     body: body,
+    headers: {
+      host: parsedUrl.host,
+      cookie: document.cookie
+    },
     locals: locals,
     originalUrl: url,
     path: parsedUrl.pathname,
@@ -245,7 +249,7 @@ function go (path, opts) {
       path: url
     });
 
-    if(!opts.preventScrollReset) {
+    if (!opts.preventScrollReset) {
       // Reset scroll position
       window.scrollTo(0,0);
     }
