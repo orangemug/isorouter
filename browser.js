@@ -155,8 +155,10 @@ function go (path, opts) {
     __id: this.reqIdx++,
     method: method,
     body: body,
+    protocol: window.location.protocol,
+    hostname: window.location.hostname,
     headers: {
-      host: parsedUrl.host,
+      host: window.location.host,
       cookie: document.cookie
     },
     locals: locals,
