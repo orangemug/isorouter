@@ -155,7 +155,7 @@ function go (path, opts) {
     __id: this.reqIdx++,
     method: method,
     body: body,
-    protocol: window.location.protocol,
+    protocol: window.location.protocol.replace(":", ""),
     hostname: window.location.hostname,
     headers: {
       host: window.location.host,
