@@ -155,6 +155,12 @@ function go (path, opts) {
     __id: this.reqIdx++,
     method: method,
     body: body,
+    protocol: window.location.protocol.replace(":", ""),
+    hostname: window.location.hostname,
+    headers: {
+      host: window.location.host,
+      cookie: document.cookie
+    },
     locals: locals,
     originalUrl: url,
     path: parsedUrl.pathname,
@@ -191,8 +197,8 @@ function go (path, opts) {
         silent: redirectOpts.silent,
         replace: redirectOpts.replace,
         redirect: shouldRedirect,
-        body: body,
-        locals: locals
+        body: redirectOpts.body || body,
+        locals: redirectOpts.locals || locals
       });
     }
   };
@@ -245,7 +251,7 @@ function go (path, opts) {
       path: url
     });
 
-    if(!opts.preventScrollReset) {
+    if (!opts.preventScrollReset) {
       // Reset scroll position
       window.scrollTo(0,0);
     }
