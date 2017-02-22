@@ -159,7 +159,8 @@ function go (path, opts) {
     hostname: window.location.hostname,
     headers: {
       host: window.location.host,
-      cookie: document.cookie
+      cookie: document.cookie,
+      referer: lastRoute ? lastRoute.path : null
     },
     locals: locals,
     originalUrl: url,
