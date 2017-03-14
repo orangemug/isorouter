@@ -171,6 +171,8 @@ function go (path, opts) {
 
   // response object, similar to express
   var res = {
+    // Data to pass through middleware
+    locals: {},
     // Mimic functionality of express res.redirect
     redirect: function (url) {
       var address = url;
