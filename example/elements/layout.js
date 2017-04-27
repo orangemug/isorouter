@@ -16,7 +16,7 @@ module.exports = React.createClass({
     var self = this;
     var router = require("../routes");
 
-    router.on("navigate", function () {
+    router.addEventListener("navigate", function () {
       console.log("navigating...");
       self.setState({
         navigating: true

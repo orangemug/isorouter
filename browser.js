@@ -274,11 +274,28 @@ function go (path, opts) {
  * add an event listener
  * @param {String}  eventName    name of event to listen for
  * @param {Function}  func       function to trigger on event
- * @returns {Void} no return
+ * @returns {Function} return the listener function for reference
  */
 function addListener (eventName, func) {
   if (this.listeners[eventName]) {
     this.listeners[eventName].push(func);
+  }
+  return func;
+}
+
+
+/**
+ * add an event listener
+ * @param {String}  eventName    name of event to listen for
+ * @param {Function}  func       function to trigger on event
+ * @returns {Void} no return
+ */
+function removelistener (eventName, func) {
+  if (this.listeners[eventName]) {
+    const pos = this.listeners[eventName].indexOf(func);
+    if (pos !== -1) {
+      this.listeners[eventName].splice(pos, 1);
+    }
   }
 }
 
@@ -306,7 +323,7 @@ module.exports = function clientRouter (opts) {
       var eventName = args[0];
       if (this.listeners[eventName]) {
         this.listeners[eventName].forEach(function (listener) {
-          listener.call(args.slice(1));
+          listener.apply(null, args.slice(1));
         });
       }
     },
@@ -330,7 +347,8 @@ module.exports = function clientRouter (opts) {
     delete: addRouteHandler.bind(ctx, "delete"),
     use: addRouteHandler.bind(ctx, "use"),
     go: go.bind(ctx),
-    on: addListener.bind(ctx),
+    addEventListener: addListener.bind(ctx),
+    removeEventListener: removeEventListener.bind(ctx),
     trigger: ctx.emit.bind(ctx),
     removeDomEventHandler: removeDomEventHandler,
     history: historyEnv
