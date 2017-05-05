@@ -292,7 +292,7 @@ function addListener (eventName, func) {
  */
 function removelistener (eventName, func) {
   if (this.listeners[eventName]) {
-    const pos = this.listeners[eventName].indexOf(func);
+    var pos = this.listeners[eventName].indexOf(func);
     if (pos !== -1) {
       this.listeners[eventName].splice(pos, 1);
     }
@@ -348,7 +348,7 @@ module.exports = function clientRouter (opts) {
     use: addRouteHandler.bind(ctx, "use"),
     go: go.bind(ctx),
     addEventListener: addListener.bind(ctx),
-    removeEventListener: removeEventListener.bind(ctx),
+    removeEventListener: removelistener.bind(ctx),
     trigger: ctx.emit.bind(ctx),
     removeDomEventHandler: removeDomEventHandler,
     history: historyEnv
