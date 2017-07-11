@@ -255,8 +255,12 @@ function go (path, opts) {
     });
 
     if (!opts.preventScrollReset) {
-      // Reset scroll position
-      window.scrollTo(0,0);
+      if (parsedUrl.hash) {
+        document.getElementById(parsedUrl.hash.replace("#", "")).scrollIntoView();
+      } else {
+        // Reset scroll position
+        window.scrollTo(0,0);
+      }
     }
 
     // Iterate through the middlewares and routes
