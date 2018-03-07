@@ -1,7 +1,7 @@
 {
   "name": "isorouter",
   "description": "Isomorphic express like router.",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "main": "./server.js",
   "browser": "./browser.js",
   "scripts": {
