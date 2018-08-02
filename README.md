@@ -113,12 +113,12 @@ Exports an object with functionality to manipulate push state history.
 * `forward()` - go to the next page in push state (if present)
 * `redirect(url, state)` - go to a url and replace the existing pushstate
 
-`router.on()`
+`router.addEventListener()`
 
 Add event listeners for events `navigate`, `error`. These are useful for creating page transitions and flash messages.
 
 ```js
-router.on("beforeNavigate", function (req, res) {
+router.addEventListener("beforeNavigate", function (req, res) {
   // do something
 });
 ```

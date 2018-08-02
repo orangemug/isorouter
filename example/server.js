@@ -15,7 +15,7 @@ var routes         = require("./routes");
 var argv = yargs
   .describe("port", "port to start server on")
   .alias("p", "port")
-  .default("p", 3000)
+  .default("p", process.env.PORT || 3000)
   .argv;
 
 var app = express();
@@ -29,6 +29,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 
 app.engine("handlebars", exphbs({}));
+app.set('views', path.join(__dirname, '/views'));
 app.set("view engine", "handlebars");
 
 

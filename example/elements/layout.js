@@ -1,29 +1,31 @@
 var React = require("react");
 
-module.exports = React.createClass({
+class Layout extends React.Component {
 
-  getInitialState: function () {
-    return {};
-  },
+  constructor(props) {
+    super(props);
+    this.state = {}
+  }
 
-  componentWillReceiveProps: function () {
+  componentWillReceiveProps() {
     this.setState({
       navigating: false
     });
-  },
+  }
 
-  componentDidMount: function () {
+  componentDidMount() {
     var self = this;
-    var router = require("../routes");
 
-    router.on("navigate", function () {
+    var router = require("../routes");
+    router.addEventListener("navigate", function () {
       console.log("navigating...");
       self.setState({
         navigating: true
       });
     });
-  },
-  render: function () {
+  }
+
+  render() {
     var className = this.state.navigating === true ? " navigating" : "";
 
     return (
@@ -32,4 +34,6 @@ module.exports = React.createClass({
       </div>
     );
   }
-});
+}
+
+module.exports = Layout;

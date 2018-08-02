@@ -1,8 +1,8 @@
 var React = require("react");
 
 
-module.exports = React.createClass({
-  render: function () {
+class UserEdit extends React.Component {
+  render() {
     return (
       <div>
         <h1><a href="/user">User</a>: Edit</h1>
@@ -34,4 +34,6 @@ module.exports = React.createClass({
       </div>
     );
   }
-});
+}
+
+module.exports = UserEdit;
