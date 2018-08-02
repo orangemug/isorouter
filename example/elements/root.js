@@ -1,8 +1,8 @@
 var React = require("react");
 
 
-module.exports = React.createClass({
-  render: function () {
+class Root extends React.Component {
+  render() {
     return (
       <div>
         <h1>Root</h1>
@@ -18,4 +18,6 @@ module.exports = React.createClass({
       </div>
     );
   }
-});
+}
+
+module.exports = Root;
